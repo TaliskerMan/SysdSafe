@@ -1,0 +1,434 @@
+[
+	{
+		"unit" : "ModemManager.service",
+		"exposure" : "6.3",
+		"predicate" : "MEDIUM",
+		"happy" : "😐"
+	},
+	{
+		"unit" : "NetworkManager.service",
+		"exposure" : "7.8",
+		"predicate" : "EXPOSED",
+		"happy" : "🙁"
+	},
+	{
+		"unit" : "accounts-daemon.service",
+		"exposure" : "5.5",
+		"predicate" : "MEDIUM",
+		"happy" : "😐"
+	},
+	{
+		"unit" : "acpid.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "alsa-state.service",
+		"exposure" : "8.5",
+		"predicate" : "EXPOSED",
+		"happy" : "🙁"
+	},
+	{
+		"unit" : "atd.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "auditd.service",
+		"exposure" : "8.9",
+		"predicate" : "EXPOSED",
+		"happy" : "🙁"
+	},
+	{
+		"unit" : "avahi-daemon.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "bluetooth.service",
+		"exposure" : "6.0",
+		"predicate" : "MEDIUM",
+		"happy" : "😐"
+	},
+	{
+		"unit" : "chrony.service",
+		"exposure" : "3.5",
+		"predicate" : "OK",
+		"happy" : "🙂"
+	},
+	{
+		"unit" : "colord.service",
+		"exposure" : "3.5",
+		"predicate" : "OK",
+		"happy" : "🙂"
+	},
+	{
+		"unit" : "com.system76.PowerDaemon.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "com.system76.Scheduler.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "com.system76.SystemUpdater.service",
+		"exposure" : "9.5",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "cosmic-greeter-daemon.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "cosmic-greeter.service",
+		"exposure" : "9.8",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "cron.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "crowdsec.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "cups-browsed.service",
+		"exposure" : "9.3",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "cups.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "dbus-:1.2-org.pop_os.transition_system@0.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "dbus-broker.service",
+		"exposure" : "8.7",
+		"predicate" : "EXPOSED",
+		"happy" : "🙁"
+	},
+	{
+		"unit" : "dm-event.service",
+		"exposure" : "9.5",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "dmesg.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "emergency.service",
+		"exposure" : "9.5",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "fwupd.service",
+		"exposure" : "7.7",
+		"predicate" : "EXPOSED",
+		"happy" : "🙁"
+	},
+	{
+		"unit" : "getty@tty1.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "gnome-remote-desktop.service",
+		"exposure" : "9.2",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "littlesnitch.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "lvm2-lvmpolld.service",
+		"exposure" : "9.5",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "lynis.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "mariadb.service",
+		"exposure" : "8.8",
+		"predicate" : "EXPOSED",
+		"happy" : "🙁"
+	},
+	{
+		"unit" : "monitro-collector.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "networkd-dispatcher.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "nvidia-persistenced.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "nvidia-powerd.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "plymouth-start.service",
+		"exposure" : "9.5",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "polkit.service",
+		"exposure" : "1.6",
+		"predicate" : "OK",
+		"happy" : "🙂"
+	},
+	{
+		"unit" : "postfix@-.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "preload.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "rc-local.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "rescue.service",
+		"exposure" : "9.5",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "rsyslog.service",
+		"exposure" : "6.3",
+		"predicate" : "MEDIUM",
+		"happy" : "😐"
+	},
+	{
+		"unit" : "rtkit-daemon.service",
+		"exposure" : "7.2",
+		"predicate" : "MEDIUM",
+		"happy" : "😐"
+	},
+	{
+		"unit" : "smartmontools.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "sshguard.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "switcheroo-control.service",
+		"exposure" : "7.6",
+		"predicate" : "EXPOSED",
+		"happy" : "🙁"
+	},
+	{
+		"unit" : "system76-driver.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "system76-firmware-daemon.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "systemd-ask-password-console.service",
+		"exposure" : "9.4",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "systemd-ask-password-plymouth.service",
+		"exposure" : "9.5",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "systemd-ask-password-wall.service",
+		"exposure" : "9.4",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "systemd-bsod.service",
+		"exposure" : "9.5",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "systemd-fsckd.service",
+		"exposure" : "9.5",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "systemd-initctl.service",
+		"exposure" : "9.4",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "systemd-journald.service",
+		"exposure" : "4.3",
+		"predicate" : "OK",
+		"happy" : "🙂"
+	},
+	{
+		"unit" : "systemd-logind.service",
+		"exposure" : "2.8",
+		"predicate" : "OK",
+		"happy" : "🙂"
+	},
+	{
+		"unit" : "systemd-networkd.service",
+		"exposure" : "2.6",
+		"predicate" : "OK",
+		"happy" : "🙂"
+	},
+	{
+		"unit" : "systemd-resolved.service",
+		"exposure" : "2.2",
+		"predicate" : "OK",
+		"happy" : "🙂"
+	},
+	{
+		"unit" : "systemd-rfkill.service",
+		"exposure" : "9.4",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "systemd-udevd.service",
+		"exposure" : "7.1",
+		"predicate" : "MEDIUM",
+		"happy" : "😐"
+	},
+	{
+		"unit" : "thermald.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "tinyproxy.service",
+		"exposure" : "8.8",
+		"predicate" : "EXPOSED",
+		"happy" : "🙁"
+	},
+	{
+		"unit" : "tpm-udev.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "ubuntu-advantage.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "udisks2.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "upower.service",
+		"exposure" : "2.4",
+		"predicate" : "OK",
+		"happy" : "🙂"
+	},
+	{
+		"unit" : "user@1000.service",
+		"exposure" : "9.4",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "usermin.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "webmin.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "whoopsie.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	},
+	{
+		"unit" : "wpa_supplicant.service",
+		"exposure" : "9.6",
+		"predicate" : "UNSAFE",
+		"happy" : "😨"
+	}
+]
