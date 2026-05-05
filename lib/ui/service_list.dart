@@ -7,7 +7,7 @@ import 'service_detail.dart';
 class ServiceListScreen extends StatefulWidget {
   final List<SystemdService> services;
 
-  const ServiceListScreen({Key? key, required this.services}) : super(key: key);
+  const ServiceListScreen({super.key, required this.services});
 
   @override
   _ServiceListScreenState createState() => _ServiceListScreenState();
@@ -19,21 +19,29 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
 
   int _urgencyValue(String level) {
     switch (level) {
-      case 'UNSAFE': return 4;
-      case 'EXPOSED': return 3;
-      case 'MEDIUM': return 2;
-      case 'OK': return 1;
-      default: return 0;
+      case 'UNSAFE':
+        return 4;
+      case 'EXPOSED':
+        return 3;
+      case 'MEDIUM':
+        return 2;
+      case 'OK':
+        return 1;
+      default:
+        return 0;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
-    
+
     List<SystemdService> filtered = widget.services.where((s) {
-      final matchesQuery = s.name.toLowerCase().contains(searchQuery.toLowerCase());
-      final matchesLevel = filterLevel == 'ALL' || s.exposureLevel == filterLevel;
+      final matchesQuery = s.name.toLowerCase().contains(
+        searchQuery.toLowerCase(),
+      );
+      final matchesLevel =
+          filterLevel == 'ALL' || s.exposureLevel == filterLevel;
       return matchesQuery && matchesLevel;
     }).toList();
 
@@ -43,7 +51,9 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
       if (urgencyA != urgencyB) {
         return urgencyB.compareTo(urgencyA); // Highest to lowest urgency
       }
-      return a.name.toLowerCase().compareTo(b.name.toLowerCase()); // A to Z alphabetical
+      return a.name.toLowerCase().compareTo(
+        b.name.toLowerCase(),
+      ); // A to Z alphabetical
     });
 
     return Padding(
@@ -57,7 +67,9 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
                   decoration: InputDecoration(
                     labelText: 'Search Services',
                     prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   onChanged: (val) {
                     setState(() {
@@ -88,7 +100,9 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
                 final service = filtered[index];
                 return Card(
                   margin: const EdgeInsets.symmetric(vertical: 6),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   child: ListTile(
                     leading: Icon(
                       Icons.security,
@@ -97,13 +111,19 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
                     ),
                     title: Text(
                       service.name,
-                      style: TextStyle(fontSize: appState.fontSizeBase + 2, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: appState.fontSizeBase + 2,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     subtitle: Text('Exposure: ${service.exposureScore}'),
                     trailing: Chip(
                       label: Text(
                         service.exposureLevel,
-                        style: TextStyle(color: Colors.white, fontSize: appState.fontSizeBase - 2),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: appState.fontSizeBase - 2,
+                        ),
                       ),
                       backgroundColor: _getColor(service.exposureLevel),
                     ),
@@ -111,7 +131,8 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ServiceDetailScreen(service: service),
+                          builder: (context) =>
+                              ServiceDetailScreen(service: service),
                         ),
                       );
                     },
@@ -127,11 +148,16 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
 
   Color _getColor(String level) {
     switch (level) {
-      case 'UNSAFE': return Colors.redAccent;
-      case 'EXPOSED': return Colors.orangeAccent;
-      case 'MEDIUM': return Colors.yellow[700]!;
-      case 'OK': return Colors.green;
-      default: return Colors.grey;
+      case 'UNSAFE':
+        return Colors.redAccent;
+      case 'EXPOSED':
+        return Colors.orangeAccent;
+      case 'MEDIUM':
+        return Colors.yellow[700]!;
+      case 'OK':
+        return Colors.green;
+      default:
+        return Colors.grey;
     }
   }
 }

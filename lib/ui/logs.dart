@@ -6,7 +6,7 @@ import '../logging.dart';
 import '../state.dart';
 
 class LogsScreen extends StatefulWidget {
-  const LogsScreen({Key? key}) : super(key: key);
+  const LogsScreen({super.key});
 
   @override
   _LogsScreenState createState() => _LogsScreenState();
@@ -37,8 +37,8 @@ class _LogsScreenState extends State<LogsScreen> {
       queryParameters: {
         'subject': 'SysdSafe Support Request',
         // Provide instructions since the body might be too large for mailto
-        'body': 'Please describe your issue here:\\n\\n\\n--- LOGS BELOW ---\\n\\n' + 
-                (_logs.length > 5000 ? _logs.substring(_logs.length - 5000) : _logs)
+        'body':
+            'Please describe your issue here:\\n\\n\\n--- LOGS BELOW ---\\n\\n${_logs.length > 5000 ? _logs.substring(_logs.length - 5000) : _logs}',
       },
     );
 
@@ -57,9 +57,9 @@ class _LogsScreenState extends State<LogsScreen> {
 
   void _copyToClipboard() {
     Clipboard.setData(ClipboardData(text: _logs));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Logs copied to clipboard!')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Logs copied to clipboard!')));
   }
 
   @override
@@ -97,7 +97,10 @@ class _LogsScreenState extends State<LogsScreen> {
                   ElevatedButton.icon(
                     onPressed: _emailSupport,
                     icon: const Icon(Icons.email),
-                    label: Text('Email Support', style: TextStyle(fontSize: appState.fontSizeBase)),
+                    label: Text(
+                      'Email Support',
+                      style: TextStyle(fontSize: appState.fontSizeBase),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blueAccent,
                       foregroundColor: Colors.white,
@@ -115,7 +118,9 @@ class _LogsScreenState extends State<LogsScreen> {
               decoration: BoxDecoration(
                 color: isDark ? Colors.black87 : Colors.grey[200],
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey[400]!),
+                border: Border.all(
+                  color: isDark ? Colors.grey[800]! : Colors.grey[400]!,
+                ),
               ),
               child: SingleChildScrollView(
                 reverse: true, // Auto-scroll to the bottom

@@ -7,17 +7,21 @@ import '../state.dart';
 class DashboardScreen extends StatefulWidget {
   final List<SystemdService> services;
 
-  const DashboardScreen({Key? key, required this.services}) : super(key: key);
+  const DashboardScreen({super.key, required this.services});
 
   @override
   _DashboardScreenState createState() => _DashboardScreenState();
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  int get unsafeCount => widget.services.where((s) => s.exposureLevel == 'UNSAFE').length;
-  int get exposedCount => widget.services.where((s) => s.exposureLevel == 'EXPOSED').length;
-  int get mediumCount => widget.services.where((s) => s.exposureLevel == 'MEDIUM').length;
-  int get okCount => widget.services.where((s) => s.exposureLevel == 'OK').length;
+  int get unsafeCount =>
+      widget.services.where((s) => s.exposureLevel == 'UNSAFE').length;
+  int get exposedCount =>
+      widget.services.where((s) => s.exposureLevel == 'EXPOSED').length;
+  int get mediumCount =>
+      widget.services.where((s) => s.exposureLevel == 'MEDIUM').length;
+  int get okCount =>
+      widget.services.where((s) => s.exposureLevel == 'OK').length;
 
   @override
   Widget build(BuildContext context) {
@@ -42,16 +46,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Expanded(
                 child: Card(
                   elevation: 4,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(24.0),
                     child: Column(
                       children: [
-                        Text('Total Services', style: TextStyle(fontSize: appState.fontSizeBase + 2)),
+                        Text(
+                          'Total Services',
+                          style: TextStyle(fontSize: appState.fontSizeBase + 2),
+                        ),
                         const SizedBox(height: 8),
                         Text(
                           '${widget.services.length}',
-                          style: TextStyle(fontSize: appState.fontSizeBase + 24, fontWeight: FontWeight.w900),
+                          style: TextStyle(
+                            fontSize: appState.fontSizeBase + 24,
+                            fontWeight: FontWeight.w900,
+                          ),
                         ),
                       ],
                     ),
@@ -62,19 +74,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Expanded(
                 child: Card(
                   elevation: 4,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(24.0),
                     child: Column(
                       children: [
-                        Text('Overall Status', style: TextStyle(fontSize: appState.fontSizeBase + 2)),
+                        Text(
+                          'Overall Status',
+                          style: TextStyle(fontSize: appState.fontSizeBase + 2),
+                        ),
                         const SizedBox(height: 8),
                         Text(
                           unsafeCount > 10 ? 'VULNERABLE' : 'FAIR',
                           style: TextStyle(
-                            fontSize: appState.fontSizeBase + 20, 
+                            fontSize: appState.fontSizeBase + 20,
                             fontWeight: FontWeight.w900,
-                            color: unsafeCount > 10 ? Colors.redAccent : Colors.orangeAccent,
+                            color: unsafeCount > 10
+                                ? Colors.redAccent
+                                : Colors.orangeAccent,
                           ),
                         ),
                       ],
@@ -101,28 +120,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 value: unsafeCount.toDouble(),
                                 title: 'Unsafe',
                                 radius: 50,
-                                titleStyle: TextStyle(fontSize: appState.fontSizeBase, fontWeight: FontWeight.bold, color: Colors.white),
+                                titleStyle: TextStyle(
+                                  fontSize: appState.fontSizeBase,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
                               ),
                               PieChartSectionData(
                                 color: Colors.orangeAccent,
                                 value: exposedCount.toDouble(),
                                 title: 'Exposed',
                                 radius: 50,
-                                titleStyle: TextStyle(fontSize: appState.fontSizeBase, fontWeight: FontWeight.bold, color: Colors.white),
+                                titleStyle: TextStyle(
+                                  fontSize: appState.fontSizeBase,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
                               ),
                               PieChartSectionData(
                                 color: Colors.yellow[700],
                                 value: mediumCount.toDouble(),
                                 title: 'Medium',
                                 radius: 50,
-                                titleStyle: TextStyle(fontSize: appState.fontSizeBase, fontWeight: FontWeight.bold, color: Colors.white),
+                                titleStyle: TextStyle(
+                                  fontSize: appState.fontSizeBase,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
                               ),
                               PieChartSectionData(
                                 color: Colors.greenAccent,
                                 value: okCount.toDouble(),
                                 title: 'OK',
                                 radius: 50,
-                                titleStyle: TextStyle(fontSize: appState.fontSizeBase, fontWeight: FontWeight.bold, color: Colors.black),
+                                titleStyle: TextStyle(
+                                  fontSize: appState.fontSizeBase,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
                               ),
                             ],
                           ),
@@ -133,10 +168,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildLegend('UNSAFE', Colors.redAccent, unsafeCount, appState.fontSizeBase),
-                            _buildLegend('EXPOSED', Colors.orangeAccent, exposedCount, appState.fontSizeBase),
-                            _buildLegend('MEDIUM', Colors.yellow[700]!, mediumCount, appState.fontSizeBase),
-                            _buildLegend('OK', Colors.greenAccent, okCount, appState.fontSizeBase),
+                            _buildLegend(
+                              'UNSAFE',
+                              Colors.redAccent,
+                              unsafeCount,
+                              appState.fontSizeBase,
+                            ),
+                            _buildLegend(
+                              'EXPOSED',
+                              Colors.orangeAccent,
+                              exposedCount,
+                              appState.fontSizeBase,
+                            ),
+                            _buildLegend(
+                              'MEDIUM',
+                              Colors.yellow[700]!,
+                              mediumCount,
+                              appState.fontSizeBase,
+                            ),
+                            _buildLegend(
+                              'OK',
+                              Colors.greenAccent,
+                              okCount,
+                              appState.fontSizeBase,
+                            ),
                           ],
                         ),
                       ),
@@ -148,7 +203,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildLegend(String label, Color color, int count, double baseFontSize) {
+  Widget _buildLegend(
+    String label,
+    Color color,
+    int count,
+    double baseFontSize,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
@@ -157,7 +217,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(width: 8),
           Text(
             '$label: $count',
-            style: TextStyle(fontSize: baseFontSize + 2, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: baseFontSize + 2,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),

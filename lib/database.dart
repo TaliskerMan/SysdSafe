@@ -1,7 +1,6 @@
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart';
-import 'dart:io';
 import 'man_parser.dart';
 
 class DirectiveExplanation {
@@ -34,10 +33,7 @@ class DatabaseHelper {
 
     return await databaseFactoryFfi.openDatabase(
       path,
-      options: OpenDatabaseOptions(
-        version: 1,
-        onCreate: _createDB,
-      ),
+      options: OpenDatabaseOptions(version: 1, onCreate: _createDB),
     );
   }
 
@@ -65,27 +61,29 @@ CREATE TABLE backups (
   timestamp $textType
 )
 ''');
-
   }
 
   Future<bool> isDatabaseInitialized() async {
     final db = await instance.database;
-    final result = await db.rawQuery('SELECT COUNT(*) as count FROM directives');
+    final result = await db.rawQuery(
+      'SELECT COUNT(*) as count FROM directives',
+    );
     final count = result.first['count'] as int? ?? 0;
     return count > 0;
   }
 
   Future<void> seedDatabase({void Function(double)? onProgress}) async {
     final db = await instance.database;
-    
+
     final parser = ManParserService();
     final parsedDirectives = await parser.parseAll(onProgress: onProgress);
-    
+
     // Default fallback if parsing fails (no pandoc, etc.)
     if (parsedDirectives.isEmpty) {
       await db.insert('directives', {
         'directive': 'PrivateNetwork',
-        'explanation': 'Sets up a new network namespace for the executed processes and only configures the loopback network device "lo".',
+        'explanation':
+            'Sets up a new network namespace for the executed processes and only configures the loopback network device "lo".',
         'snippet': 'PrivateNetwork=yes',
       });
       return;
@@ -126,7 +124,8 @@ CREATE TABLE backups (
     } else {
       return DirectiveExplanation(
         directive: directivePart,
-        explanation: 'No specific explanation found in database. This directive restricts system access.',
+        explanation:
+            'No specific explanation found in database. This directive restricts system access.',
         snippet: '$directivePart=...',
       );
     }
@@ -138,10 +137,14 @@ CREATE TABLE backups (
   Future<void> backupServiceState(String serviceName, String content) async {
     final db = await instance.database;
     final timestamp = DateTime.now().toIso8601String();
-    
+
     // Check if backup already exists
-    final maps = await db.query('backups', where: 'service_name = ?', whereArgs: [serviceName]);
-    
+    final maps = await db.query(
+      'backups',
+      where: 'service_name = ?',
+      whereArgs: [serviceName],
+    );
+
     if (maps.isNotEmpty) {
       // Update existing backup to ensure only the most recent state is kept
       await db.update(

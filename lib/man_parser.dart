@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:convert';
 import 'logging.dart';
 
 class ParsedDirective {
@@ -23,17 +22,19 @@ class ManParserService {
     'systemd.unit',
   ];
 
-  Future<List<ParsedDirective>> parseAll({void Function(double)? onProgress}) async {
+  Future<List<ParsedDirective>> parseAll({
+    void Function(double)? onProgress,
+  }) async {
     List<ParsedDirective> allDirectives = [];
     int total = targetManPages.length;
     int current = 0;
-    
+
     for (String page in targetManPages) {
       try {
         // Find man page path
         final pathResult = await Process.run('man', ['-w', page]);
         if (pathResult.exitCode != 0) continue;
-        
+
         final path = (pathResult.stdout as String).trim();
         if (path.isEmpty) continue;
 
@@ -41,18 +42,31 @@ class ManParserService {
         ProcessResult pandocResult;
         if (path.endsWith('.gz')) {
           final zcatProcess = await Process.start('zcat', [path]);
-          final pandocProcess = await Process.start('pandoc', ['-f', 'man', '-t', 'markdown']);
-          
+          final pandocProcess = await Process.start('pandoc', [
+            '-f',
+            'man',
+            '-t',
+            'markdown',
+          ]);
+
           zcatProcess.stdout.pipe(pandocProcess.stdin);
-          
-          final pandocOutput = await pandocProcess.stdout.transform(SystemEncoding().decoder).join();
+
+          final pandocOutput = await pandocProcess.stdout
+              .transform(SystemEncoding().decoder)
+              .join();
           final exitCode = await pandocProcess.exitCode;
-          
+
           if (exitCode == 0) {
             allDirectives.addAll(_parseMarkdown(pandocOutput));
           }
         } else {
-          pandocResult = await Process.run('pandoc', ['-f', 'man', '-t', 'markdown', path]);
+          pandocResult = await Process.run('pandoc', [
+            '-f',
+            'man',
+            '-t',
+            'markdown',
+            path,
+          ]);
           if (pandocResult.exitCode == 0) {
             allDirectives.addAll(_parseMarkdown(pandocResult.stdout as String));
           }
@@ -72,10 +86,10 @@ class ManParserService {
   List<ParsedDirective> _parseMarkdown(String markdown) {
     List<ParsedDirective> parsed = [];
     final lines = markdown.split('\n');
-    
+
     String? currentDirective;
     List<String> currentExplanation = [];
-    
+
     // Regex to match *DirectiveName=* or similar headers.
     final directiveRegex = RegExp(r'^\*([A-Za-z0-9]+)=\*$');
 
@@ -84,23 +98,27 @@ class ManParserService {
       if (match != null) {
         // Save previous if exists
         if (currentDirective != null && currentExplanation.isNotEmpty) {
-          parsed.add(ParsedDirective(
-            directive: currentDirective,
-            explanationMarkdown: currentExplanation.join('\n').trim(),
-            snippet: '$currentDirective=...',
-          ));
+          parsed.add(
+            ParsedDirective(
+              directive: currentDirective,
+              explanationMarkdown: currentExplanation.join('\n').trim(),
+              snippet: '$currentDirective=...',
+            ),
+          );
         }
-        
+
         currentDirective = match.group(1);
         currentExplanation = [];
       } else if (line.startsWith('# ')) {
         // Save previous if we hit a new major section header
         if (currentDirective != null && currentExplanation.isNotEmpty) {
-          parsed.add(ParsedDirective(
-            directive: currentDirective,
-            explanationMarkdown: currentExplanation.join('\n').trim(),
-            snippet: '$currentDirective=...',
-          ));
+          parsed.add(
+            ParsedDirective(
+              directive: currentDirective,
+              explanationMarkdown: currentExplanation.join('\n').trim(),
+              snippet: '$currentDirective=...',
+            ),
+          );
         }
         currentDirective = null;
         currentExplanation = [];
@@ -111,16 +129,18 @@ class ManParserService {
         }
       }
     }
-    
+
     // Catch the last one
     if (currentDirective != null && currentExplanation.isNotEmpty) {
-      parsed.add(ParsedDirective(
-        directive: currentDirective,
-        explanationMarkdown: currentExplanation.join('\n').trim(),
-        snippet: '$currentDirective=...',
-      ));
+      parsed.add(
+        ParsedDirective(
+          directive: currentDirective,
+          explanationMarkdown: currentExplanation.join('\n').trim(),
+          snippet: '$currentDirective=...',
+        ),
+      );
     }
-    
+
     return parsed;
   }
 }

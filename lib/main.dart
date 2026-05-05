@@ -22,7 +22,7 @@ void main() async {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
-  
+
   await LogService().init();
   LogService.info('SysdSafe Application Started');
 
@@ -35,7 +35,7 @@ void main() async {
 }
 
 class SysdSafeApp extends StatelessWidget {
-  const SysdSafeApp({Key? key}) : super(key: key);
+  const SysdSafeApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -47,19 +47,17 @@ class SysdSafeApp extends StatelessWidget {
           theme: ThemeData(
             brightness: Brightness.light,
             primarySwatch: Colors.blue,
-            textTheme: GoogleFonts.notoSansTextTheme(ThemeData.light().textTheme).apply(
-              bodyColor: Colors.black,
-              displayColor: Colors.black,
-            ),
+            textTheme: GoogleFonts.notoSansTextTheme(
+              ThemeData.light().textTheme,
+            ).apply(bodyColor: Colors.black, displayColor: Colors.black),
             scaffoldBackgroundColor: Colors.white,
           ),
           darkTheme: ThemeData(
             brightness: Brightness.dark,
             primarySwatch: Colors.green,
-            textTheme: GoogleFonts.notoSansTextTheme(ThemeData.dark().textTheme).apply(
-              bodyColor: Colors.white,
-              displayColor: Colors.white,
-            ),
+            textTheme: GoogleFonts.notoSansTextTheme(
+              ThemeData.dark().textTheme,
+            ).apply(bodyColor: Colors.white, displayColor: Colors.white),
             // Dark navy background
             scaffoldBackgroundColor: const Color(0xFF001F3F),
             cardColor: const Color(0xFF003366),
@@ -72,7 +70,7 @@ class SysdSafeApp extends StatelessWidget {
 }
 
 class InitializerScreen extends StatefulWidget {
-  const InitializerScreen({Key? key}) : super(key: key);
+  const InitializerScreen({super.key});
 
   @override
   _InitializerScreenState createState() => _InitializerScreenState();
@@ -108,7 +106,7 @@ class _InitializerScreenState extends State<InitializerScreen> {
 }
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({Key? key}) : super(key: key);
+  const MainScreen({super.key});
 
   @override
   _MainScreenState createState() => _MainScreenState();
@@ -168,7 +166,11 @@ class _MainScreenState extends State<MainScreen> {
             onPressed: appState.increaseFontSize,
           ),
           IconButton(
-            icon: Icon(appState.themeMode == ThemeMode.dark ? Icons.light_mode : Icons.dark_mode),
+            icon: Icon(
+              appState.themeMode == ThemeMode.dark
+                  ? Icons.light_mode
+                  : Icons.dark_mode,
+            ),
             tooltip: 'Toggle Theme',
             onPressed: appState.toggleTheme,
           ),
@@ -196,10 +198,16 @@ class _MainScreenState extends State<MainScreen> {
           });
         },
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard),
+            label: 'Dashboard',
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.list), label: 'Services'),
           BottomNavigationBarItem(icon: Icon(Icons.book), label: 'Reference'),
-          BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: 'Logs'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.receipt_long),
+            label: 'Logs',
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.info), label: 'About'),
           BottomNavigationBarItem(icon: Icon(Icons.gavel), label: 'Legal'),
         ],

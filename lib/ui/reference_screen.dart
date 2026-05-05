@@ -3,10 +3,9 @@ import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:provider/provider.dart';
 import '../state.dart';
 import '../database.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 class ReferenceScreen extends StatefulWidget {
-  const ReferenceScreen({Key? key}) : super(key: key);
+  const ReferenceScreen({super.key});
 
   @override
   _ReferenceScreenState createState() => _ReferenceScreenState();
@@ -27,14 +26,20 @@ class _ReferenceScreenState extends State<ReferenceScreen> {
   Future<void> _loadData() async {
     final db = await DatabaseHelper.instance.database;
     final maps = await db.query('directives');
-    
-    final directives = maps.map((map) => DirectiveExplanation(
-      directive: map['directive'] as String,
-      explanation: map['explanation'] as String,
-      snippet: map['snippet'] as String,
-    )).toList();
 
-    directives.sort((a, b) => a.directive.toLowerCase().compareTo(b.directive.toLowerCase()));
+    final directives = maps
+        .map(
+          (map) => DirectiveExplanation(
+            directive: map['directive'] as String,
+            explanation: map['explanation'] as String,
+            snippet: map['snippet'] as String,
+          ),
+        )
+        .toList();
+
+    directives.sort(
+      (a, b) => a.directive.toLowerCase().compareTo(b.directive.toLowerCase()),
+    );
 
     setState(() {
       _allDirectives = directives;
@@ -46,9 +51,9 @@ class _ReferenceScreenState extends State<ReferenceScreen> {
   void _filter(String query) {
     setState(() {
       _searchQuery = query;
-      _filteredDirectives = _allDirectives.where((d) => 
-        d.directive.toLowerCase().contains(query.toLowerCase())
-      ).toList();
+      _filteredDirectives = _allDirectives
+          .where((d) => d.directive.toLowerCase().contains(query.toLowerCase()))
+          .toList();
     });
   }
 
@@ -79,13 +84,15 @@ class _ReferenceScreenState extends State<ReferenceScreen> {
             decoration: InputDecoration(
               labelText: 'Search Directives',
               prefixIcon: const Icon(Icons.search),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
             onChanged: _filter,
           ),
           const SizedBox(height: 16),
           Expanded(
-            child: _isLoading 
+            child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : ListView.builder(
                     itemCount: _filteredDirectives.length,
@@ -95,8 +102,11 @@ class _ReferenceScreenState extends State<ReferenceScreen> {
                         margin: const EdgeInsets.symmetric(vertical: 8),
                         child: ExpansionTile(
                           title: Text(
-                            item.directive, 
-                            style: TextStyle(fontSize: appState.fontSizeBase + 2, fontWeight: FontWeight.bold)
+                            item.directive,
+                            style: TextStyle(
+                              fontSize: appState.fontSizeBase + 2,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           children: [
                             Padding(
@@ -104,17 +114,33 @@ class _ReferenceScreenState extends State<ReferenceScreen> {
                               child: MarkdownBody(
                                 data: item.explanation,
                                 styleSheet: MarkdownStyleSheet(
-                                  p: TextStyle(fontSize: appState.fontSizeBase, color: isDark ? Colors.white : Colors.black),
-                                  strong: TextStyle(fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black),
-                                  blockquoteDecoration: BoxDecoration(
-                                    color: isDark ? const Color(0xFF002855) : Colors.grey[200],
-                                    borderRadius: BorderRadius.circular(4),
-                                    border: Border.all(color: isDark ? Colors.white24 : Colors.black12),
+                                  p: TextStyle(
+                                    fontSize: appState.fontSizeBase,
+                                    color: isDark ? Colors.white : Colors.black,
                                   ),
-                                  blockquote: TextStyle(color: isDark ? Colors.white70 : Colors.black87),
+                                  strong: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark ? Colors.white : Colors.black,
+                                  ),
+                                  blockquoteDecoration: BoxDecoration(
+                                    color: isDark
+                                        ? const Color(0xFF002855)
+                                        : Colors.grey[200],
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                      color: isDark
+                                          ? Colors.white24
+                                          : Colors.black12,
+                                    ),
+                                  ),
+                                  blockquote: TextStyle(
+                                    color: isDark
+                                        ? Colors.white70
+                                        : Colors.black87,
+                                  ),
                                 ),
                               ),
-                            )
+                            ),
                           ],
                         ),
                       );

@@ -4,7 +4,7 @@ import 'dart:io';
 import '../state.dart';
 
 class LegalScreen extends StatefulWidget {
-  const LegalScreen({Key? key}) : super(key: key);
+  const LegalScreen({super.key});
 
   @override
   _LegalScreenState createState() => _LegalScreenState();
@@ -29,7 +29,8 @@ class _LegalScreenState extends State<LegalScreen> {
         });
       } else {
         setState(() {
-          licenseText = 'LICENSE file not found. SysdSafe is licensed under the Affero GNU GPL v3 License.';
+          licenseText =
+              'LICENSE file not found. SysdSafe is licensed under the Affero GNU GPL v3 License.';
         });
       }
     } catch (e) {
@@ -59,7 +60,9 @@ class _LegalScreenState extends State<LegalScreen> {
           const SizedBox(height: 24),
           Card(
             elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(24.0),
               child: Column(
@@ -75,7 +78,10 @@ class _LegalScreenState extends State<LegalScreen> {
                   const SizedBox(height: 12),
                   Text(
                     'Copyright © ${DateTime.now().year} Chuck Talk, a Nordheim Online product.\nAll Rights Reserved.',
-                    style: TextStyle(fontSize: appState.fontSizeBase + 2, height: 1.5),
+                    style: TextStyle(
+                      fontSize: appState.fontSizeBase + 2,
+                      height: 1.5,
+                    ),
                   ),
                   const SizedBox(height: 24),
                   Text(
@@ -92,7 +98,10 @@ class _LegalScreenState extends State<LegalScreen> {
                       Expanded(
                         child: Text(
                           'This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.',
-                          style: TextStyle(fontSize: appState.fontSizeBase + 2, height: 1.5),
+                          style: TextStyle(
+                            fontSize: appState.fontSizeBase + 2,
+                            height: 1.5,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -109,7 +118,9 @@ class _LegalScreenState extends State<LegalScreen> {
           Expanded(
             child: Card(
               elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               color: isDark ? Colors.black26 : Colors.grey[100],
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
