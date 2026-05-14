@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'dart:io';
+import 'package:path/path.dart' as p;
+import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
 import 'state.dart';
 import 'scanner.dart';
@@ -135,6 +138,46 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
+  Future<void> _openAuditViewer() async {
+    try {
+      final auditDir = Directory(p.join(Directory.current.path, 'Audit'));
+      final auditFile = File(p.join(auditDir.path, 'hardening_audit.json'));
+      String jsonData = '[]';
+      if (await auditFile.exists()) {
+        jsonData = await auditFile.readAsString();
+      } else {
+        LogService.error('hardening_audit.json not found. Run a scan first.');
+        // If there's no data yet, we can still show empty viewer, but it's empty
+      }
+
+      // Read template from assets
+      final htmlTemplate = await rootBundle.loadString('assets/audit_viewer.html');
+      
+      // Inject JSON data
+      final htmlContent = htmlTemplate.replaceFirst(
+        '/*INJECT_JSON_DATA*/[]/*END_INJECT_JSON_DATA*/', 
+        jsonData,
+      );
+
+      // Write to a file inside Audit/
+      final viewerFile = File(p.join(auditDir.path, 'audit_viewer.html'));
+      if (!await auditDir.exists()) {
+        await auditDir.create(recursive: true);
+      }
+      await viewerFile.writeAsString(htmlContent);
+
+      // Open in default browser
+      final uri = Uri.file(viewerFile.absolute.path);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+      } else {
+        LogService.error('Could not launch browser for $uri');
+      }
+    } catch (e) {
+      LogService.error('Error opening audit viewer: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
@@ -150,6 +193,11 @@ class _MainScreenState extends State<MainScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.open_in_browser),
+            tooltip: 'Open HTML Audit Viewer',
+            onPressed: _openAuditViewer,
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: 'Re-scan',

@@ -1,0 +1,464 @@
+<!--
+  Hardening Audit Viewer
+  Copyright (C) 2026 Chuck Talk as a Nordheim Online product.
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hardening Audit Viewer</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-color: #0f172a;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --card-bg: #1e293b;
+    --border-color: #334155;
+    
+    --color-ok: #10b981;
+    --color-medium: #f59e0b;
+    --color-exposed: #f97316;
+    --color-unsafe: #ef4444;
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+  
+  header {
+    padding: 2.5rem 2rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    position: relative;
+  }
+  
+  h1 {
+    margin: 0;
+    font-size: 2.5rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    background: linear-gradient(to right, #60a5fa, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .subtitle {
+    color: var(--text-muted);
+    margin-top: 0.75rem;
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .upload-container {
+    display: inline-block;
+  }
+
+  .upload-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    color: white;
+    font-weight: 600;
+    border-radius: 9999px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .upload-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+  }
+
+  .tabs-container {
+    display: flex;
+    justify-content: center;
+    padding: 1.5rem 2rem;
+    background-color: rgba(30, 41, 59, 0.5);
+    border-bottom: 1px solid var(--border-color);
+    gap: 1rem;
+    overflow-x: auto;
+    backdrop-filter: blur(8px);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  
+  .tab {
+    padding: 0.75rem 1.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 2px solid transparent;
+    border-radius: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  
+  .tab:hover {
+    color: var(--text-main);
+    background-color: rgba(255, 255, 255, 0.08);
+    transform: translateY(-1px);
+  }
+  
+  .tab.active {
+    color: var(--text-main);
+    background-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+  }
+  
+  .tab.active[data-target="OK"] { border-color: var(--color-ok); background-color: rgba(16, 185, 129, 0.15); }
+  .tab.active[data-target="MEDIUM"] { border-color: var(--color-medium); background-color: rgba(245, 158, 11, 0.15); }
+  .tab.active[data-target="EXPOSED"] { border-color: var(--color-exposed); background-color: rgba(249, 115, 22, 0.15); }
+  .tab.active[data-target="UNSAFE"] { border-color: var(--color-unsafe); background-color: rgba(239, 68, 68, 0.15); }
+
+  .badge {
+    padding: 0.25rem 0.6rem;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    background-color: rgba(255, 255, 255, 0.15);
+  }
+
+  .content-area {
+    padding: 3rem 2rem;
+    flex-grow: 1;
+    overflow-y: auto;
+  }
+  
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  
+  .card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+  }
+  
+  .card:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+    border-color: rgba(255,255,255,0.2);
+  }
+  
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 6px;
+    height: 100%;
+    transition: width 0.2s ease;
+  }
+  
+  .card:hover::before {
+    width: 8px;
+  }
+
+  .card[data-predicate="OK"]::before { background-color: var(--color-ok); }
+  .card[data-predicate="MEDIUM"]::before { background-color: var(--color-medium); }
+  .card[data-predicate="EXPOSED"]::before { background-color: var(--color-exposed); }
+  .card[data-predicate="UNSAFE"]::before { background-color: var(--color-unsafe); }
+  
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .unit-name {
+    font-size: 1.15rem;
+    font-weight: 600;
+    word-break: break-all;
+    line-height: 1.4;
+    color: #e2e8f0;
+  }
+  
+  .emoji {
+    font-size: 1.8rem;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.5rem;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .metrics {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: auto;
+    background-color: rgba(15, 23, 42, 0.6);
+    padding: 1rem;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+  
+  .metric {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .metric-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+  }
+  
+  .metric-value {
+    font-weight: 700;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: baseline;
+    gap: 0.25rem;
+  }
+
+  .metric-value .max-score {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+
+  .metric-value.exposure {
+    color: var(--text-main);
+  }
+  
+  .card[data-predicate="OK"] .metric-value.exposure { color: var(--color-ok); }
+  .card[data-predicate="MEDIUM"] .metric-value.exposure { color: var(--color-medium); }
+  .card[data-predicate="EXPOSED"] .metric-value.exposure { color: var(--color-exposed); }
+  .card[data-predicate="UNSAFE"] .metric-value.exposure { color: var(--color-unsafe); }
+
+  /* Animations */
+  @keyframes fadeInScale {
+    from { 
+      opacity: 0; 
+      transform: translateY(15px) scale(0.98); 
+    }
+    to { 
+      opacity: 1; 
+      transform: translateY(0) scale(1); 
+    }
+  }
+
+  .card.show {
+    animation: fadeInScale 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  }
+
+  /* Empty state */
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text-muted);
+    background: var(--card-bg);
+    border-radius: 1rem;
+    border: 1px dashed var(--border-color);
+  }
+
+  .empty-state h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-main);
+  }
+
+</style>
+</head>
+<body>
+
+  <header>
+    <h1>Hardening Audit Viewer</h1>
+    <div class="subtitle">System Services Security Analysis Dashboard</div>
+    
+    <div class="upload-container">
+      <label for="file-upload" class="upload-btn">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+        Select JSON File
+      </label>
+      <input id="file-upload" type="file" accept=".json" style="display: none;" />
+    </div>
+  </header>
+
+  <div class="tabs-container" id="tabs">
+    <!-- Tabs will be generated here -->
+  </div>
+
+  <div class="content-area">
+    <div class="grid" id="grid">
+      <div class="empty-state">
+        <h3>No Data Loaded</h3>
+        <p>Please use the "Select JSON File" button above to upload your <code>hardening_audit.json</code> file.</p>
+      </div>
+    </div>
+  </div>
+
+<script>
+  let auditData = /*INJECT_JSON_DATA*/[]/*END_INJECT_JSON_DATA*/;
+  let activeTab = "UNSAFE";
+  const order = ["UNSAFE", "EXPOSED", "MEDIUM", "OK"];
+  let predicates = [];
+
+  document.getElementById('file-upload').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        auditData = JSON.parse(e.target.result);
+        initDashboard();
+      } catch (err) {
+        alert("Failed to parse the file. Please ensure it is a valid JSON file.");
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  function initDashboard() {
+    // Sort alphabetically by unit
+    auditData.sort((a, b) => {
+      const unitA = a.unit || "";
+      const unitB = b.unit || "";
+      return unitA.localeCompare(unitB);
+    });
+
+    // Extract unique predicates
+    predicates = [...new Set(auditData.map(item => item.predicate))]
+      .sort((a, b) => {
+        let indexA = order.indexOf(a);
+        let indexB = order.indexOf(b);
+        if (indexA === -1) indexA = 99;
+        if (indexB === -1) indexB = 99;
+        return indexA - indexB;
+      });
+
+    if (!predicates.includes(activeTab) && predicates.length > 0) {
+      activeTab = predicates[0];
+    }
+
+    renderTabs();
+    renderGrid();
+  }
+
+  function renderTabs() {
+    const tabsContainer = document.getElementById('tabs');
+    tabsContainer.innerHTML = '';
+    
+    predicates.forEach(pred => {
+      const count = auditData.filter(d => d.predicate === pred).length;
+      const btn = document.createElement('button');
+      btn.className = `tab ${pred === activeTab ? 'active' : ''}`;
+      btn.dataset.target = pred;
+      btn.innerHTML = `${pred} <span class="badge">${count}</span>`;
+      btn.onclick = () => {
+        if (activeTab === pred) return;
+        activeTab = pred;
+        renderTabs();
+        renderGrid();
+      };
+      tabsContainer.appendChild(btn);
+    });
+  }
+
+  function renderGrid() {
+    const gridContainer = document.getElementById('grid');
+    gridContainer.innerHTML = '';
+    
+    const filtered = auditData.filter(d => d.predicate === activeTab);
+    
+    if (filtered.length === 0) {
+      gridContainer.innerHTML = `
+        <div class="empty-state">
+          <h3>No services found</h3>
+          <p>There are no services matching the ${activeTab} criteria.</p>
+        </div>
+      `;
+      return;
+    }
+    
+    filtered.forEach((item, index) => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.dataset.predicate = item.predicate;
+      // Staggered animation
+      card.style.animationDelay = `${Math.min(index * 0.03, 1)}s`;
+      
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="unit-name">${item.unit}</div>
+          <div class="emoji">${item.happy || '🛡️'}</div>
+        </div>
+        <div class="metrics">
+          <div class="metric">
+            <span class="metric-label">Exposure Score</span>
+            <span class="metric-value exposure">${item.exposure} <span class="max-score">/ 10</span></span>
+          </div>
+        </div>
+      `;
+      
+      gridContainer.appendChild(card);
+      
+      // Trigger reflow to restart animation and add 'show' class
+      void card.offsetWidth;
+      card.classList.add('show');
+    });
+  }
+
+  // Auto-init if data is pre-loaded via injection
+  if (auditData.length > 0) {
+    document.querySelector('.upload-container').style.display = 'none';
+    document.addEventListener('DOMContentLoaded', () => initDashboard());
+  }
+
+</script>
+</body>
+</html>
