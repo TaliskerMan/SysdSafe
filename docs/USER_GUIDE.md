@@ -1,77 +1,83 @@
-# SysdSafe User Guide
+# SysdSafe - Comprehensive User Guide
 
-Welcome to SysdSafe! This utility is designed to help you analyze and secure your Linux systemd services. Our goal is to provide a "first, do no harm" approach to system hardening, following the ShadowAgent security principles.
+Welcome to **SysdSafe**! This utility is an advanced hardening and audit tool designed specifically to help you analyze and secure your Linux systemd services. 
 
-## Table of Contents
-1. [Installation](#installation)
-2. [Setup & Configuration](#setup--configuration)
-3. [Using the Auto-Fix Feature](#using-the-auto-fix-feature)
-4. [Safety, Misuse, and Recovery](#safety-misuse-and-recovery)
-5. [Logging & Support](#logging--support)
+Our fundamental guiding principle is **"First, do no harm."** Systemd is the core init system for most modern Linux distributions, managing everything from basic network connectivity to critical web servers. SysdSafe is engineered to help you carefully review, understand, and alter your systemd services to minimize the attack surface of your hosts without breaking them.
 
 ---
 
-## Installation
+## ⚠️ 1. Critical Philosophy: Safety First
 
-SysdSafe is distributed as a Debian package (`.deb`). To install it on Debian, Ubuntu, or derivative distributions, run the following command in your terminal:
+SysdSafe is a powerful tool. Applying security restrictions improperly can cause critical services to fail, applications to crash, or your machine to become unbootable. 
+
+To prevent catastrophic harm, SysdSafe **does not** apply blanket settings across all services. Every host is unique, and security must be tailored to your specific environment.
+
+**When using SysdSafe, you must adhere to these rules:**
+1. **Examine Your Host's Use Case:** Before modifying a service, understand exactly what that service does on your specific host. Does it need network access? Does it need to write to `/var/log`? 
+2. **Make Slow, Careful Changes:** Do not attempt to lock down every service in a single session. Secure one service, reboot or restart the service, test its functionality, and then move on to the next.
+3. **Avoid Altering What You Do Not Understand:** If you do not know what `ProtectSystem=strict` or `PrivateNetwork=yes` actually does to a specific daemon, *do not apply the fix* until you have researched it.
+
+---
+
+## 💾 2. Installation Instructions
+
+SysdSafe is distributed natively as a Debian package (`.deb`). 
+
+To install it on Debian, Ubuntu, or derivative distributions, execute the following commands in your terminal:
 
 ```bash
-sudo dpkg -i sysdsafe_1.0.0_amd64.deb
-```
+# Install the package
+sudo dpkg -i sysdsafe_1.0.2_amd64.deb
 
-If you encounter missing dependencies, run:
-```bash
+# If you encounter any missing dependency errors, resolve them with:
 sudo apt-get install -f
 ```
 
 ---
 
-## Setup & Configuration
+## 🎮 3. Navigation & Setup
 
-Once installed, you can launch SysdSafe from your desktop application menu or by running `sysdsafe` in your terminal. No initial configuration is required. The application immediately reads your system's `systemd` service files to present an analysis of your system's current security posture.
+Upon launching SysdSafe (via your desktop application menu or by running `sysdsafe` in your terminal), the application will immediately begin scanning your `systemd` service files. No initial configuration is required.
 
-- **Scan Speed**: The initial scan parses your system services and their corresponding manual pages to provide detailed context and mitigation steps. This might take a few seconds depending on the speed of your system.
-- **Service Risks**: Services are rated by urgency (High, Medium, Low) based on known risk factors, such as running with root privileges, missing process isolation, or lacking memory protection directives.
-
----
-
-## Using the Auto-Fix Feature
-
-SysdSafe includes a built-in Auto-Fix engine to help you harden insecure services with ease.
-
-1. **Review Suggestions**: Tap on any service in the list to review the security suggestions (e.g., adding `ProtectSystem=strict`, `PrivateTmp=yes`, etc.).
-2. **Apply Auto-Fix**: Tap the "Apply Auto-Fix" button to automatically create a systemd configuration drop-in file (in `/etc/systemd/system/`).
-3. **Polkit Authorization**: To apply changes, SysdSafe will prompt you for your user password. SysdSafe executes these operations via `pkexec` ensuring that changes are made securely without requiring the entire app to run as root.
+**The Interface:**
+* **Dashboard / Service List:** Displays all detected services, rated by urgency (High, Medium, Low). Ratings are based on known risk factors, such as services running as root or lacking process isolation.
+* **Service Detail View:** Tapping a service opens a detailed view where SysdSafe parses the service's configuration and corresponding manual pages to provide context on what the service actually does.
+* **Logs Tab:** A dedicated tab for viewing historical actions and errors.
 
 ---
 
-## Safety, Misuse, and Recovery
+## 🛠️ 4. Usage: Auditing & Hardening (Auto-Fix)
 
-We build with security in mind. Improperly configuring system services can lead to system instability, applications crashing, or the inability to boot your machine.
+### Auditing a Service
+1. Select a service from the main list.
+2. Read the provided documentation context carefully to understand its role.
+3. Review the specific security vulnerabilities identified (e.g., missing memory protection directives).
 
-**Consequences of Misuse:**
-- Applying too many restrictions (like `ProtectSystem=strict` or `PrivateNetwork=yes`) to a service that genuinely needs access to system files or the network can cause that service to fail silently or crash upon startup.
-- We highly recommend researching specific directives before applying them if you are unsure of their impact.
+### Applying an Auto-Fix (Carefully!)
+If you understand the service and agree with the suggested security directives:
+1. Tap the **Apply Auto-Fix** button.
+2. SysdSafe will create a systemd configuration drop-in file (in `/etc/systemd/system/`).
+3. **Authorization:** You will be prompted for your password. SysdSafe securely executes these surgical changes via `pkexec`, ensuring the entire application does not run as root.
 
-**SysdSafe Recovery & Revert:**
-To ensure your system remains safe, SysdSafe enforces an atomic backup mechanism before making any configuration changes.
-- **Backup Location**: Before any Auto-Fix is applied, the original service state is safely backed up to `~/sysdsafe_backups/`. 
-- **Reverting Changes**: If a service begins to misbehave after an Auto-Fix, navigate to that service's detail page and tap "Revert Auto-Fix". SysdSafe will remove the custom drop-in file and restore the service to its original configuration.
+### Recovery & Reverting Changes
+Because we prioritize the "first, do no harm" approach, SysdSafe includes an atomic backup and revert mechanism:
+* **Automatic Backups:** Before any Auto-Fix is applied, the original service state is safely backed up to `~/sysdsafe_backups/`. 
+* **Reverting:** If you make a slow, careful change and suddenly find that the service is failing, simply navigate back to that service's detail page and tap **Revert Auto-Fix**. SysdSafe will instantly remove the custom drop-in file and restore the service to its original working configuration.
 
 ---
 
-## Logging & Support
+## 📝 5. Logging & Support
 
-SysdSafe utilizes a robust, persistent logging facility to track application events, including when Auto-Fixes and Reverts are applied.
+SysdSafe utilizes a robust, persistent logging facility to track application events, including when you apply or revert an Auto-Fix.
 
-### Accessing Logs
-- Logs are stored locally in accordance with the XDG Base Directory Specification: `~/.local/state/sysdsafe/app.log`.
-- You can view the logs directly inside the SysdSafe application by navigating to the **Logs** tab via the bottom navigation bar.
+* **Log Location:** Logs are securely stored at `~/.local/state/sysdsafe/app.log`.
+* **In-App Viewing:** You can view these logs directly in the **Logs** tab via the bottom navigation bar.
 
-### Obtaining Support
-If you encounter a problem you cannot recover from, or if you believe you have found a bug, our support team is ready to assist you.
-- Open the **Logs** tab in SysdSafe and click the **Email Support** button.
-- This will automatically open your default email client with the support address pre-filled (`support@nordheim.online`).
-- **Please manually attach the `app.log` file** found at `~/.local/state/sysdsafe/app.log` so our team can help you diagnose the issue.
+**Obtaining Support:**
+If you encounter a systemic issue or bug that you cannot recover from:
+1. Open the **Logs** tab and click the **Email Support** button.
+2. Your default email client will open, pre-filled with our support address.
+3. **Please manually attach your `app.log` file** so our team can carefully review the issue and help you safely resolve it.
 
+---
 *Stay safe. Build securely. Do no harm.*
