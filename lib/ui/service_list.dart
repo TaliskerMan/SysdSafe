@@ -10,7 +10,7 @@ class ServiceListScreen extends StatefulWidget {
   const ServiceListScreen({super.key, required this.services});
 
   @override
-  _ServiceListScreenState createState() => _ServiceListScreenState();
+  State<ServiceListScreen> createState() => _ServiceListScreenState();
 }
 
 class _ServiceListScreenState extends State<ServiceListScreen> {

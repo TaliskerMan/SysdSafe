@@ -8,13 +8,12 @@ class ReferenceScreen extends StatefulWidget {
   const ReferenceScreen({super.key});
 
   @override
-  _ReferenceScreenState createState() => _ReferenceScreenState();
+  State<ReferenceScreen> createState() => _ReferenceScreenState();
 }
 
 class _ReferenceScreenState extends State<ReferenceScreen> {
   List<DirectiveExplanation> _allDirectives = [];
   List<DirectiveExplanation> _filteredDirectives = [];
-  String _searchQuery = '';
   bool _isLoading = true;
 
   @override
@@ -50,7 +49,6 @@ class _ReferenceScreenState extends State<ReferenceScreen> {
 
   void _filter(String query) {
     setState(() {
-      _searchQuery = query;
       _filteredDirectives = _allDirectives
           .where((d) => d.directive.toLowerCase().contains(query.toLowerCase()))
           .toList();

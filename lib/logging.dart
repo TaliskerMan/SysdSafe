@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 
 class LogService {
   static final LogService _instance = LogService._internal();
@@ -21,7 +22,7 @@ class LogService {
     final logLine = '[$timestamp] [$level] $message';
     
     // Print to console for development/debug
-    print(logLine);
+    debugPrint(logLine);
 
     // Append to file
     if (_logFile != null) {

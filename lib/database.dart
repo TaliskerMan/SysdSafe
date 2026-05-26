@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart';
@@ -28,6 +29,14 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDB(String filePath) async {
+    if (Platform.environment.containsKey('FLUTTER_TEST')) {
+      sqfliteFfiInit();
+      databaseFactory = databaseFactoryFfi;
+      return await databaseFactoryFfi.openDatabase(
+        inMemoryDatabasePath,
+        options: OpenDatabaseOptions(version: 1, onCreate: _createDB),
+      );
+    }
     final dbPath = await getApplicationSupportDirectory();
     final path = join(dbPath.path, filePath);
 

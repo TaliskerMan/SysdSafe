@@ -14,7 +14,7 @@ class ServiceDetailScreen extends StatefulWidget {
   const ServiceDetailScreen({super.key, required this.service});
 
   @override
-  _ServiceDetailScreenState createState() => _ServiceDetailScreenState();
+  State<ServiceDetailScreen> createState() => _ServiceDetailScreenState();
 }
 
 class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
@@ -43,10 +43,11 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
     // Explicitly reject any service names containing directory separators or parent paths
     // to guarantee that no arbitrary files are targeted.
     if (serviceName.contains('/') || serviceName.contains('..')) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Error: Invalid service name format.')),
         );
+      }
       return;
     }
 
@@ -94,10 +95,11 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
       }
     } catch (e) {
       LogService.error('Backup failed for $serviceName: $e');
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Auto-Fix aborted due to backup failure: $e')),
         );
+      }
       setState(() => isLoading = false);
       return; // Do NOT proceed if backup fails
     }
@@ -127,24 +129,27 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
       ]);
       if (result.exitCode == 0) {
         LogService.info('Auto-Fix applied successfully for $serviceName');
-        if (mounted)
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Auto-Fix applied successfully! Backups saved.'),
             ),
           );
+        }
       } else {
         LogService.error('Auto-Fix failed for $serviceName: ${result.stderr}');
-        if (mounted)
+        if (mounted) {
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(SnackBar(content: Text('Failed: ${result.stderr}')));
+        }
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     }
     await _loadDetails();
   }
@@ -154,10 +159,11 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
 
     // ShadowAgent Rule: Input Validation & Path Traversal Prevention
     if (serviceName.contains('/') || serviceName.contains('..')) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Error: Invalid service name format.')),
         );
+      }
       return;
     }
 
@@ -193,17 +199,19 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
         }
       } else {
         LogService.error('Revert failed for $serviceName: ${result.stderr}');
-        if (mounted)
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Revert failed: ${result.stderr}')),
           );
+        }
       }
     } catch (e) {
       LogService.error('Revert execution error for $serviceName: $e');
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     }
     await _loadDetails();
   }

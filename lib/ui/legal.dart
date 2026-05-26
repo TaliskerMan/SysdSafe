@@ -7,7 +7,7 @@ class LegalScreen extends StatefulWidget {
   const LegalScreen({super.key});
 
   @override
-  _LegalScreenState createState() => _LegalScreenState();
+  State<LegalScreen> createState() => _LegalScreenState();
 }
 
 class _LegalScreenState extends State<LegalScreen> {
