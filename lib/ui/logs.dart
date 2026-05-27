@@ -1,3 +1,13 @@
+// Copyright (C) 2026 Chuck Talk <cwtalk1@gmail.com>
+// This file is part of SysdSafe.
+//
+// SysdSafe is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, version 3.
+//
+// SysdSafe is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY. See the GNU AGPL v3 for details.
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -5,6 +15,7 @@ import 'package:provider/provider.dart';
 import '../logging.dart';
 import '../state.dart';
 
+/// Documentation for LogsScreen.
 class LogsScreen extends StatefulWidget {
   const LogsScreen({super.key});
 
@@ -23,7 +34,9 @@ class _LogsScreenState extends State<LogsScreen> {
 
   Future<void> _loadLogs() async {
     final contents = await LogService.getLogContents();
+    /// Documentation for if.
     if (mounted) {
+      /// Documentation for setState.
       setState(() {
         _logs = contents;
       });
@@ -47,6 +60,7 @@ class _LogsScreenState extends State<LogsScreen> {
         throw Exception('Could not launch email client.');
       }
     } catch (e) {
+      /// Documentation for if.
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to open email client: $e')),

@@ -1,8 +1,21 @@
+// Copyright (C) 2026 Chuck Talk <cwtalk1@gmail.com>
+// This file is part of SysdSafe.
+//
+// SysdSafe is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, version 3.
+//
+// SysdSafe is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY. See the GNU AGPL v3 for details.
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../state.dart';
 import '../database.dart';
+import 'legal.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+/// Documentation for AboutScreen.
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
 
@@ -81,6 +94,30 @@ class AboutScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const LegalScreen()));
+                    },
+                    icon: const Icon(Icons.gavel),
+                    label: Text(
+                      'Legal / License',
+                      style: TextStyle(fontSize: appState.fontSizeBase),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, version 3.',
+                    style: TextStyle(fontSize: appState.fontSizeBase),
+                  ),
+                  const SizedBox(height: 8),
+                  InkWell(
+                    onTap: () => launchUrl(Uri.parse('https://github.com/TaliskerMan/SysdSafe')),
+                    child: Text(
+                      'Source code: https://github.com/TaliskerMan/SysdSafe',
+                      style: TextStyle(fontSize: appState.fontSizeBase, color: Colors.blue, decoration: TextDecoration.underline),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
                     onPressed: () async {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
@@ -90,6 +127,7 @@ class AboutScreen extends StatelessWidget {
                         ),
                       );
                       await DatabaseHelper.instance.syncDatabase();
+                      /// Documentation for if.
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Sync complete!')),

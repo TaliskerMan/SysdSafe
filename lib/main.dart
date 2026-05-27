@@ -1,3 +1,13 @@
+// Copyright (C) 2026 Chuck Talk <cwtalk1@gmail.com>
+// This file is part of SysdSafe.
+//
+// SysdSafe is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, version 3.
+//
+// SysdSafe is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY. See the GNU AGPL v3 for details.
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -21,6 +31,7 @@ import 'database.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  /// Documentation for if.
   if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
@@ -37,6 +48,7 @@ void main() async {
   );
 }
 
+/// Documentation for SysdSafeApp.
 class SysdSafeApp extends StatelessWidget {
   const SysdSafeApp({super.key});
 
@@ -72,6 +84,7 @@ class SysdSafeApp extends StatelessWidget {
   }
 }
 
+/// Documentation for InitializerScreen.
 class InitializerScreen extends StatefulWidget {
   const InitializerScreen({super.key});
 
@@ -91,7 +104,9 @@ class _InitializerScreenState extends State<InitializerScreen> {
 
   Future<void> _checkInit() async {
     final isInit = await DatabaseHelper.instance.isDatabaseInitialized();
+    /// Documentation for if.
     if (mounted) {
+      /// Documentation for setState.
       setState(() {
         _isInitialized = isInit;
         _isLoading = false;
@@ -101,6 +116,7 @@ class _InitializerScreenState extends State<InitializerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    /// Documentation for if.
     if (_isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
@@ -108,6 +124,7 @@ class _InitializerScreenState extends State<InitializerScreen> {
   }
 }
 
+/// Documentation for MainScreen.
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
@@ -128,10 +145,12 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Future<void> _scanServices() async {
+    /// Documentation for setState.
     setState(() {
       isLoading = true;
     });
     final result = await scanner.scanServices();
+    /// Documentation for setState.
     setState(() {
       services = result;
       isLoading = false;
@@ -241,6 +260,7 @@ class _MainScreenState extends State<MainScreen> {
         type: BottomNavigationBarType.fixed,
         currentIndex: _currentIndex,
         onTap: (index) {
+          /// Documentation for setState.
           setState(() {
             _currentIndex = index;
           });

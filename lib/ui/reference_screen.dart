@@ -1,9 +1,20 @@
+// Copyright (C) 2026 Chuck Talk <cwtalk1@gmail.com>
+// This file is part of SysdSafe.
+//
+// SysdSafe is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, version 3.
+//
+// SysdSafe is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY. See the GNU AGPL v3 for details.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:provider/provider.dart';
 import '../state.dart';
 import '../database.dart';
 
+/// Documentation for ReferenceScreen.
 class ReferenceScreen extends StatefulWidget {
   const ReferenceScreen({super.key});
 
@@ -40,6 +51,7 @@ class _ReferenceScreenState extends State<ReferenceScreen> {
       (a, b) => a.directive.toLowerCase().compareTo(b.directive.toLowerCase()),
     );
 
+    /// Documentation for setState.
     setState(() {
       _allDirectives = directives;
       _filteredDirectives = directives;
@@ -48,6 +60,7 @@ class _ReferenceScreenState extends State<ReferenceScreen> {
   }
 
   void _filter(String query) {
+    /// Documentation for setState.
     setState(() {
       _filteredDirectives = _allDirectives
           .where((d) => d.directive.toLowerCase().contains(query.toLowerCase()))

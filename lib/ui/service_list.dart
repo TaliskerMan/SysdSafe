@@ -1,9 +1,20 @@
+// Copyright (C) 2026 Chuck Talk <cwtalk1@gmail.com>
+// This file is part of SysdSafe.
+//
+// SysdSafe is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, version 3.
+//
+// SysdSafe is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY. See the GNU AGPL v3 for details.
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../scanner.dart';
 import '../state.dart';
 import 'service_detail.dart';
 
+/// Documentation for ServiceListScreen.
 class ServiceListScreen extends StatefulWidget {
   final List<SystemdService> services;
 
@@ -18,6 +29,7 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
   String filterLevel = 'ALL';
 
   int _urgencyValue(String level) {
+    /// Documentation for switch.
     switch (level) {
       case 'UNSAFE':
         return 4;
@@ -48,6 +60,7 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
     filtered.sort((a, b) {
       final urgencyA = _urgencyValue(a.exposureLevel);
       final urgencyB = _urgencyValue(b.exposureLevel);
+      /// Documentation for if.
       if (urgencyA != urgencyB) {
         return urgencyB.compareTo(urgencyA); // Highest to lowest urgency
       }
@@ -72,6 +85,7 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
                     ),
                   ),
                   onChanged: (val) {
+                    /// Documentation for setState.
                     setState(() {
                       searchQuery = val;
                     });
@@ -85,6 +99,7 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
                     .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                     .toList(),
                 onChanged: (val) {
+                  /// Documentation for setState.
                   setState(() {
                     if (val != null) filterLevel = val;
                   });
@@ -147,6 +162,7 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
   }
 
   Color _getColor(String level) {
+    /// Documentation for switch.
     switch (level) {
       case 'UNSAFE':
         return Colors.redAccent;

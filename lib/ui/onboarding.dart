@@ -1,8 +1,19 @@
+// Copyright (C) 2026 Chuck Talk <cwtalk1@gmail.com>
+// This file is part of SysdSafe.
+//
+// SysdSafe is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, version 3.
+//
+// SysdSafe is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY. See the GNU AGPL v3 for details.
+
 import 'package:flutter/material.dart';
 import 'dart:io';
 import '../database.dart';
 import '../main.dart';
 
+/// Documentation for OnboardingScreen.
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -23,12 +34,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _checkPandoc() async {
+    /// Documentation for setState.
     setState(() {
       _isCheckingPandoc = true;
     });
     try {
       final result = await Process.run('pandoc', ['--version']);
+      /// Documentation for if.
       if (result.exitCode == 0) {
+        /// Documentation for setState.
         setState(() {
           _hasPandoc = true;
         });
@@ -36,12 +50,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     } catch (e) {
       // Pandoc not found
     }
+    /// Documentation for setState.
     setState(() {
       _isCheckingPandoc = false;
     });
   }
 
   Future<void> _startSeeding() async {
+    /// Documentation for setState.
     setState(() {
       _isSeeding = true;
       _progress = 0.0;
@@ -49,7 +65,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     await DatabaseHelper.instance.seedDatabase(
       onProgress: (p) {
+        /// Documentation for if.
         if (mounted) {
+          /// Documentation for setState.
           setState(() {
             _progress = p;
           });
@@ -57,6 +75,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       },
     );
 
+    /// Documentation for if.
     if (mounted) {
       Navigator.of(
         context,

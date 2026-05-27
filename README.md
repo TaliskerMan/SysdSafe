@@ -9,3 +9,10 @@ For full installation instructions, setup, and safe usage guidelines, please see
 ## Support
 
 If you encounter any issues, SysdSafe features a built-in logging facility and an "Email Support" button to quickly get in touch with our team. Please refer to the User Guide for more details.
+
+## License
+
+This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
+See the [LICENSE](LICENSE) file for the full text.
+
+Source code is available at: https://github.com/TaliskerMan/SysdSafe

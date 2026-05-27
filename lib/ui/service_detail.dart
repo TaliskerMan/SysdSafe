@@ -1,3 +1,13 @@
+// Copyright (C) 2026 Chuck Talk <cwtalk1@gmail.com>
+// This file is part of SysdSafe.
+//
+// SysdSafe is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, version 3.
+//
+// SysdSafe is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY. See the GNU AGPL v3 for details.
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:io';
@@ -8,6 +18,7 @@ import '../state.dart';
 import '../database.dart';
 import '../logging.dart';
 
+/// Documentation for ServiceDetailScreen.
 class ServiceDetailScreen extends StatefulWidget {
   final SystemdService service;
 
@@ -30,6 +41,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
 
   Future<void> _loadDetails() async {
     final vulns = await scanner.scanServiceDetails(widget.service.name);
+    /// Documentation for setState.
     setState(() {
       vulnerabilities = vulns;
       isLoading = false;
@@ -43,6 +55,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
     // Explicitly reject any service names containing directory separators or parent paths
     // to guarantee that no arbitrary files are targeted.
     if (serviceName.contains('/') || serviceName.contains('..')) {
+      /// Documentation for if.
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Error: Invalid service name format.')),
@@ -65,6 +78,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
         '--',
         serviceName,
       ]);
+      /// Documentation for if.
       if (catResult.exitCode == 0) {
         final originalContent = catResult.stdout.toString();
 
@@ -95,6 +109,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
       }
     } catch (e) {
       LogService.error('Backup failed for $serviceName: $e');
+      /// Documentation for if.
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Auto-Fix aborted due to backup failure: $e')),
@@ -105,6 +120,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
     }
 
     String fileContent = '[Service]\\n';
+    /// Documentation for for.
     for (var advice in tier1Advice) {
       fileContent += '${advice.snippet}\\n';
     }
@@ -127,8 +143,10 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
         filePath,
         serviceName,
       ]);
+      /// Documentation for if.
       if (result.exitCode == 0) {
         LogService.info('Auto-Fix applied successfully for $serviceName');
+        /// Documentation for if.
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -138,6 +156,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
         }
       } else {
         LogService.error('Auto-Fix failed for $serviceName: ${result.stderr}');
+        /// Documentation for if.
         if (mounted) {
           ScaffoldMessenger.of(
             context,
@@ -145,6 +164,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
         }
       }
     } catch (e) {
+      /// Documentation for if.
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -159,6 +179,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
 
     // ShadowAgent Rule: Input Validation & Path Traversal Prevention
     if (serviceName.contains('/') || serviceName.contains('..')) {
+      /// Documentation for if.
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Error: Invalid service name format.')),
@@ -185,8 +206,10 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
         filePath,
         serviceName,
       ]);
+      /// Documentation for if.
       if (result.exitCode == 0) {
         LogService.info('Auto-Fix reverted successfully for $serviceName');
+        /// Documentation for if.
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -199,6 +222,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
         }
       } else {
         LogService.error('Revert failed for $serviceName: ${result.stderr}');
+        /// Documentation for if.
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Revert failed: ${result.stderr}')),
@@ -207,6 +231,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
       }
     } catch (e) {
       LogService.error('Revert execution error for $serviceName: $e');
+      /// Documentation for if.
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -224,6 +249,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
     // Group vulnerabilities by Tier
     final Map<int, List<HardeningAdvice>> tieredAdvice = {1: [], 2: [], 3: []};
 
+    /// Documentation for for.
     for (var vuln in vulnerabilities) {
       final advice = RecommendationEngine.getAdvice(vuln.name);
       tieredAdvice[advice.tier]?.add(advice);

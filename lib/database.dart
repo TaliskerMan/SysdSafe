@@ -1,9 +1,20 @@
+// Copyright (C) 2026 Chuck Talk <cwtalk1@gmail.com>
+// This file is part of SysdSafe.
+//
+// SysdSafe is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, version 3.
+//
+// SysdSafe is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY. See the GNU AGPL v3 for details.
+
 import 'dart:io';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart';
 import 'man_parser.dart';
 
+/// Documentation for DirectiveExplanation.
 class DirectiveExplanation {
   final String directive;
   final String explanation;
@@ -16,6 +27,7 @@ class DirectiveExplanation {
   });
 }
 
+/// Documentation for DatabaseHelper.
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
@@ -72,6 +84,7 @@ CREATE TABLE backups (
 ''');
   }
 
+  /// Documentation for isDatabaseInitialized.
   Future<bool> isDatabaseInitialized() async {
     final db = await instance.database;
     final result = await db.rawQuery(
@@ -100,6 +113,7 @@ CREATE TABLE backups (
 
     // Insert all parsed in a batch for efficiency
     Batch batch = db.batch();
+    /// Documentation for for.
     for (var pd in parsedDirectives) {
       batch.insert('directives', {
         'directive': pd.directive,
@@ -110,6 +124,7 @@ CREATE TABLE backups (
     await batch.commit(noResult: true);
   }
 
+  /// Documentation for syncDatabase.
   Future<void> syncDatabase() async {
     final db = await instance.database;
     await db.execute('DELETE FROM directives');
@@ -124,6 +139,7 @@ CREATE TABLE backups (
       whereArgs: ['%$directivePart%'],
     );
 
+    /// Documentation for if.
     if (maps.isNotEmpty) {
       return DirectiveExplanation(
         directive: maps.first['directive'] as String,
@@ -154,6 +170,7 @@ CREATE TABLE backups (
       whereArgs: [serviceName],
     );
 
+    /// Documentation for if.
     if (maps.isNotEmpty) {
       // Update existing backup to ensure only the most recent state is kept
       await db.update(
@@ -181,6 +198,7 @@ CREATE TABLE backups (
       whereArgs: [serviceName],
     );
 
+    /// Documentation for if.
     if (maps.isNotEmpty) {
       return maps.first['original_content'] as String;
     }
