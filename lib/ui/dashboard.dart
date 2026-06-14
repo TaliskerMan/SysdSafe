@@ -14,10 +14,12 @@ import 'package:fl_chart/fl_chart.dart';
 import '../scanner.dart';
 import '../state.dart';
 
-/// Documentation for DashboardScreen.
+/// Screen widget that displays security exposure statistics and charts.
 class DashboardScreen extends StatefulWidget {
+  /// The collection of scanned Systemd services.
   final List<SystemdService> services;
 
+  /// Constructor for [DashboardScreen].
   const DashboardScreen({super.key, required this.services});
 
   @override
@@ -213,6 +215,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  /// Build a colored legend item containing status text label and counts.
   Widget _buildLegend(
     String label,
     Color color,

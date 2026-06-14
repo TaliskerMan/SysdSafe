@@ -31,7 +31,6 @@ import 'database.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  /// Documentation for if.
   if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
@@ -48,7 +47,10 @@ void main() async {
   );
 }
 
-/// Documentation for SysdSafeApp.
+/// Root Widget of the SysdSafe application.
+///
+/// Builds a [MaterialApp] with support for system theme switching and initializes
+/// a custom Noto Sans typography scheme.
 class SysdSafeApp extends StatelessWidget {
   const SysdSafeApp({super.key});
 
@@ -84,7 +86,10 @@ class SysdSafeApp extends StatelessWidget {
   }
 }
 
-/// Documentation for InitializerScreen.
+/// Screen widget that handles initial database checks.
+///
+/// Prompts the [OnboardingScreen] if the directives database is empty,
+/// or redirects directly to the [MainScreen] if already initialized.
 class InitializerScreen extends StatefulWidget {
   const InitializerScreen({super.key});
 
@@ -104,9 +109,7 @@ class _InitializerScreenState extends State<InitializerScreen> {
 
   Future<void> _checkInit() async {
     final isInit = await DatabaseHelper.instance.isDatabaseInitialized();
-    /// Documentation for if.
     if (mounted) {
-      /// Documentation for setState.
       setState(() {
         _isInitialized = isInit;
         _isLoading = false;
@@ -116,7 +119,6 @@ class _InitializerScreenState extends State<InitializerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    /// Documentation for if.
     if (_isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
@@ -124,7 +126,12 @@ class _InitializerScreenState extends State<InitializerScreen> {
   }
 }
 
-/// Documentation for MainScreen.
+/// Screen widget displaying the main tab navigation panel.
+///
+/// Integrates the [DashboardScreen], [ServiceListScreen], [ReferenceScreen],
+/// [LogsScreen], [AboutScreen], and [LegalScreen] screens. Also hosts the action
+/// triggers for restarting scans, scaling fonts, toggling themes, and launching the
+/// HTML Audit Viewer in the system browser.
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
@@ -144,19 +151,22 @@ class _MainScreenState extends State<MainScreen> {
     _scanServices();
   }
 
+  /// Scan systemd services and refresh the list in the UI.
   Future<void> _scanServices() async {
-    /// Documentation for setState.
     setState(() {
       isLoading = true;
     });
     final result = await scanner.scanServices();
-    /// Documentation for setState.
     setState(() {
       services = result;
       isLoading = false;
     });
   }
 
+  /// Generate and open the HTML audit viewer containing the results of the hardening scan.
+  ///
+  /// Reads raw scan JSON output from the local Audit folder, merges it with the
+  /// HTML viewer template asset, writes the output to disk, and opens it in the browser.
   Future<void> _openAuditViewer() async {
     try {
       final auditDir = Directory(p.join(Directory.current.path, 'Audit'));
@@ -260,7 +270,6 @@ class _MainScreenState extends State<MainScreen> {
         type: BottomNavigationBarType.fixed,
         currentIndex: _currentIndex,
         onTap: (index) {
-          /// Documentation for setState.
           setState(() {
             _currentIndex = index;
           });

@@ -14,7 +14,10 @@ import 'package:provider/provider.dart';
 import '../state.dart';
 import '../database.dart';
 
-/// Documentation for ReferenceScreen.
+/// A screen that displays the systemd security directives reference.
+///
+/// It allows users to browse all parsed systemd security directives,
+/// search/filter by name, and view the formatted markdown explanations.
 class ReferenceScreen extends StatefulWidget {
   const ReferenceScreen({super.key});
 
@@ -33,6 +36,8 @@ class _ReferenceScreenState extends State<ReferenceScreen> {
     _loadData();
   }
 
+  /// Asynchronously queries the `directives` table in SQLite, builds the list
+  /// of [DirectiveExplanation]s sorted alphabetically, and updates the state.
   Future<void> _loadData() async {
     final db = await DatabaseHelper.instance.database;
     final maps = await db.query('directives');
@@ -51,7 +56,6 @@ class _ReferenceScreenState extends State<ReferenceScreen> {
       (a, b) => a.directive.toLowerCase().compareTo(b.directive.toLowerCase()),
     );
 
-    /// Documentation for setState.
     setState(() {
       _allDirectives = directives;
       _filteredDirectives = directives;
@@ -59,8 +63,8 @@ class _ReferenceScreenState extends State<ReferenceScreen> {
     });
   }
 
+  /// Filters the list of directives to match those whose name contains the search query.
   void _filter(String query) {
-    /// Documentation for setState.
     setState(() {
       _filteredDirectives = _allDirectives
           .where((d) => d.directive.toLowerCase().contains(query.toLowerCase()))

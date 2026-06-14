@@ -13,14 +13,20 @@ import 'dart:convert';
 import 'package:path/path.dart' as p;
 import 'logging.dart';
 
-/// Documentation for SystemdService.
+/// Model class representing a Systemd unit service scanned by Systemd scanner.
 class SystemdService {
+  /// Name of the Systemd service unit.
   final String name;
+  /// Service description.
   final String description;
+  /// Overall exposure rating score.
   final double exposureScore;
-  final String exposureLevel; // OK, MEDIUM, EXPOSED, UNSAFE
+  /// Descriptive exposure level assessment (e.g., OK, MEDIUM, EXPOSED, UNSAFE).
+  final String exposureLevel;
+  /// String/Unicode representation of the status emoticon.
   final String icon;
 
+  /// Constructor for [SystemdService].
   SystemdService({
     required this.name,
     required this.description,
@@ -30,12 +36,16 @@ class SystemdService {
   });
 }
 
-/// Documentation for Vulnerability.
+/// Model class representing an active vulnerability or security weakness in a service unit.
 class Vulnerability {
+  /// The Systemd configuration directive that is missing or insecurely set.
   final String name;
+  /// The security risk description.
   final String description;
+  /// Exposure impact score.
   final double exposure;
 
+  /// Constructor for [Vulnerability].
   Vulnerability({
     required this.name,
     required this.description,
@@ -43,14 +53,15 @@ class Vulnerability {
   });
 }
 
-/// Documentation for SystemdScanner.
+/// Scanner service wrapper to run `systemd-analyze security` command analysis.
 class SystemdScanner {
-  /// Documentation for scanServices.
+  /// Scan all Systemd services and output detailed security status lists.
+  ///
+  /// Also exports the raw results to Audit/hardening_audit.json for offline viewing.
   Future<List<SystemdService>> scanServices() async {
     List<SystemdService> services = [];
     try {
       final result = await Process.run('systemd-analyze', ['security', '--json=pretty']);
-      /// Documentation for if.
       if (result.exitCode == 0) {
         final String stdout = result.stdout as String;
         
@@ -63,7 +74,6 @@ class SystemdScanner {
         await auditFile.writeAsString(stdout);
 
         final List<dynamic> jsonList = jsonDecode(stdout);
-        /// Documentation for for.
         for (var item in jsonList) {
           final String name = item['unit'] ?? '';
           final double score = double.tryParse(item['exposure'] ?? '0.0') ?? 0.0;
@@ -85,7 +95,7 @@ class SystemdScanner {
     return services;
   }
 
-  /// Documentation for scanServiceDetails.
+  /// Scan the security details and retrieve vulnerabilities for the specified service name.
   Future<List<Vulnerability>> scanServiceDetails(String serviceName) async {
     List<Vulnerability> vulnerabilities = [];
     try {
@@ -93,15 +103,12 @@ class SystemdScanner {
       // Insert '--' before user-controlled input so a maliciously named service (e.g. "--help")
       // is treated as an argument rather than a command flag.
       final result = await Process.run('systemd-analyze', ['security', '--json=pretty', '--', serviceName]);
-      /// Documentation for if.
       if (result.exitCode == 0) {
         final List<dynamic> jsonList = jsonDecode(result.stdout as String);
-        /// Documentation for for.
         for (var item in jsonList) {
           // A vulnerability is present if 'set' is false (meaning the directive is NOT set)
           if (item['set'] == false) {
             final double exposure = double.tryParse(item['exposure']?.toString() ?? '0.0') ?? 0.0;
-            /// Documentation for if.
             if (exposure > 0) {
               vulnerabilities.add(Vulnerability(
                 name: item['name'] ?? '',

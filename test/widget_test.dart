@@ -14,6 +14,7 @@ import 'package:provider/provider.dart';
 import 'package:sysdsafe/main.dart';
 import 'package:sysdsafe/state.dart';
 
+/// Main entry point for the SysdSafe widget and integration tests.
 void main() {
   testWidgets('SysdSafe app smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.

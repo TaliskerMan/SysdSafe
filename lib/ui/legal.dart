@@ -3,8 +3,9 @@ import 'package:provider/provider.dart';
 import 'dart:io';
 import '../state.dart';
 
-/// Documentation for LegalScreen.
+/// Screen widget that displays the application license terms and copyright information.
 class LegalScreen extends StatefulWidget {
+  /// Constructor for [LegalScreen].
   const LegalScreen({super.key});
 
   @override
@@ -25,19 +26,16 @@ class _LegalScreenState extends State<LegalScreen> {
       final file = File('LICENSE');
       if (await file.exists()) {
         final content = await file.readAsString();
-        /// Documentation for setState.
         setState(() {
           licenseText = content;
         });
       } else {
-        /// Documentation for setState.
         setState(() {
           licenseText =
               'LICENSE file not found. SysdSafe is licensed under the Affero GNU GPL v3 License.';
         });
       }
     } catch (e) {
-      /// Documentation for setState.
       setState(() {
         licenseText = 'Could not read license file: \$e';
       });

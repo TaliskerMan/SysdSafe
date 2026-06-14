@@ -13,7 +13,10 @@ import 'dart:io';
 import '../database.dart';
 import '../main.dart';
 
-/// Documentation for OnboardingScreen.
+/// The onboarding and dependency-checking screen shown to the user on first launch.
+///
+/// This screen checks if the required system dependencies (like `pandoc`) are available
+/// and assists the user in seeding the local SQLite database from the system's man pages.
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -33,16 +36,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     _checkPandoc();
   }
 
+  /// Checks if the `pandoc` utility is available on the system PATH by running `pandoc --version`.
   Future<void> _checkPandoc() async {
-    /// Documentation for setState.
     setState(() {
       _isCheckingPandoc = true;
     });
     try {
       final result = await Process.run('pandoc', ['--version']);
-      /// Documentation for if.
       if (result.exitCode == 0) {
-        /// Documentation for setState.
         setState(() {
           _hasPandoc = true;
         });
@@ -50,14 +51,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     } catch (e) {
       // Pandoc not found
     }
-    /// Documentation for setState.
     setState(() {
       _isCheckingPandoc = false;
     });
   }
 
+  /// Begins the asynchronous process of parsing system man pages and seeding the database,
+  /// updating the progress bar in the UI. Redirects to the main dashboard upon completion.
   Future<void> _startSeeding() async {
-    /// Documentation for setState.
     setState(() {
       _isSeeding = true;
       _progress = 0.0;
@@ -65,9 +66,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     await DatabaseHelper.instance.seedDatabase(
       onProgress: (p) {
-        /// Documentation for if.
         if (mounted) {
-          /// Documentation for setState.
           setState(() {
             _progress = p;
           });
@@ -75,7 +74,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       },
     );
 
-    /// Documentation for if.
     if (mounted) {
       Navigator.of(
         context,

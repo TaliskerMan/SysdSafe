@@ -10,7 +10,7 @@
 
 import 'package:flutter/material.dart';
 
-/// Documentation for AppState.
+/// Manages global application state, including active theme and base font size configurations.
 class AppState extends ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.system;
   double _fontSizeBase = 14.0;
@@ -18,15 +18,14 @@ class AppState extends ChangeNotifier {
   ThemeMode get themeMode => _themeMode;
   double get fontSizeBase => _fontSizeBase;
 
-  /// Documentation for setThemeMode.
+  /// Update the active theme mode.
   void setThemeMode(ThemeMode mode) {
     _themeMode = mode;
     notifyListeners();
   }
 
-  /// Documentation for toggleTheme.
+  /// Toggle the theme mode between system, dark, and light values.
   void toggleTheme() {
-    /// Documentation for if.
     if (_themeMode == ThemeMode.light) {
       _themeMode = ThemeMode.dark;
     } else if (_themeMode == ThemeMode.dark) {
@@ -37,18 +36,16 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Documentation for increaseFontSize.
+  /// Increase the font size by 1.0pt up to a maximum of 19.0pt.
   void increaseFontSize() {
-    /// Documentation for if.
     if (_fontSizeBase < 19.0) {
       _fontSizeBase += 1.0;
       notifyListeners();
     }
   }
 
-  /// Documentation for decreaseFontSize.
+  /// Decrease the font size by 1.0pt down to a minimum of 8.0pt.
   void decreaseFontSize() {
-    /// Documentation for if.
     if (_fontSizeBase > 8.0) {
       _fontSizeBase -= 1.0;
       notifyListeners();

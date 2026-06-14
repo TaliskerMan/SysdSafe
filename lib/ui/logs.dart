@@ -15,7 +15,10 @@ import 'package:provider/provider.dart';
 import '../logging.dart';
 import '../state.dart';
 
-/// Documentation for LogsScreen.
+/// A screen that displays the system and application logs to the user.
+///
+/// It provides options to refresh the logs, copy them to the system clipboard,
+/// or draft a support email with the logs appended as context.
 class LogsScreen extends StatefulWidget {
   const LogsScreen({super.key});
 
@@ -32,17 +35,18 @@ class _LogsScreenState extends State<LogsScreen> {
     _loadLogs();
   }
 
+  /// Asynchronously loads the application logs from the storage and updates the state.
   Future<void> _loadLogs() async {
     final contents = await LogService.getLogContents();
-    /// Documentation for if.
     if (mounted) {
-      /// Documentation for setState.
       setState(() {
         _logs = contents;
       });
     }
   }
 
+  /// Launches the user's default email app pre-populated with support details
+  /// and the last 5000 characters of the application log.
   Future<void> _emailSupport() async {
     final Uri emailLaunchUri = Uri(
       scheme: 'mailto',
@@ -60,7 +64,6 @@ class _LogsScreenState extends State<LogsScreen> {
         throw Exception('Could not launch email client.');
       }
     } catch (e) {
-      /// Documentation for if.
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to open email client: $e')),
@@ -69,6 +72,7 @@ class _LogsScreenState extends State<LogsScreen> {
     }
   }
 
+  /// Copies the currently displayed logs to the system clipboard.
   void _copyToClipboard() {
     Clipboard.setData(ClipboardData(text: _logs));
     ScaffoldMessenger.of(

@@ -14,7 +14,10 @@ import '../scanner.dart';
 import '../state.dart';
 import 'service_detail.dart';
 
-/// Documentation for ServiceListScreen.
+/// A widget that displays a list of systemd services analyzed by the scanner.
+///
+/// It supports dynamic filtering by service name and risk classification (e.g. UNSAFE, EXPOSED, OK).
+/// Services are sorted by urgency level (exposure level descending), then alphabetically.
 class ServiceListScreen extends StatefulWidget {
   final List<SystemdService> services;
 
@@ -28,8 +31,8 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
   String searchQuery = '';
   String filterLevel = 'ALL';
 
+  /// Converts the string risk level into a numeric score for sorting purposes.
   int _urgencyValue(String level) {
-    /// Documentation for switch.
     switch (level) {
       case 'UNSAFE':
         return 4;
@@ -60,7 +63,6 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
     filtered.sort((a, b) {
       final urgencyA = _urgencyValue(a.exposureLevel);
       final urgencyB = _urgencyValue(b.exposureLevel);
-      /// Documentation for if.
       if (urgencyA != urgencyB) {
         return urgencyB.compareTo(urgencyA); // Highest to lowest urgency
       }
@@ -85,7 +87,6 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
                     ),
                   ),
                   onChanged: (val) {
-                    /// Documentation for setState.
                     setState(() {
                       searchQuery = val;
                     });
@@ -99,7 +100,6 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
                     .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                     .toList(),
                 onChanged: (val) {
-                  /// Documentation for setState.
                   setState(() {
                     if (val != null) filterLevel = val;
                   });
@@ -161,8 +161,8 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
     );
   }
 
+  /// Helper method that maps the string risk level to a themed visual color.
   Color _getColor(String level) {
-    /// Documentation for switch.
     switch (level) {
       case 'UNSAFE':
         return Colors.redAccent;

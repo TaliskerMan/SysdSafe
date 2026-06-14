@@ -8,13 +8,20 @@
 // SysdSafe is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY. See the GNU AGPL v3 for details.
 
+/// Model class representing security advice and fixes for a Systemd directive.
 class HardeningAdvice {
-  final int tier; // 1 = Low Risk, 2 = Medium Risk, 3 = High Risk
+  /// The priority tier (1 = Low Risk, 2 = Medium Risk, 3 = High Risk).
+  final int tier;
+  /// The Systemd configuration directive.
   final String directive;
+  /// A human-readable question prompting the user about service requirements.
   final String humanQuestion;
+  /// Recommendations and explanations on safety and context.
   final String humanAdvice;
+  /// The recommended configuration fix snippet.
   final String snippet;
 
+  /// Constructor for [HardeningAdvice].
   HardeningAdvice({
     required this.tier,
     required this.directive,
@@ -24,7 +31,7 @@ class HardeningAdvice {
   });
 }
 
-/// Documentation for RecommendationEngine.
+/// Advice matrix engine mapping Systemd directives to hardening advice and configuration fixes.
 class RecommendationEngine {
   static final Map<String, HardeningAdvice> _matrix = {
     // TIER 1: Low Risk (Quick Wins)
@@ -125,7 +132,7 @@ class RecommendationEngine {
     ),
   };
 
-  /// Documentation for getAdvice.
+  /// Retrieve the matching [HardeningAdvice] recommendations for a raw directive string.
   static HardeningAdvice getAdvice(String directiveRaw) {
     // directiveRaw from JSON might look like "ProtectHome=" or "CapabilityBoundingSet=~CAP_SYS_TIME"
     final baseDirective = directiveRaw.split('=')[0];

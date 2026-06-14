@@ -11,12 +11,16 @@
 import 'dart:io';
 import 'logging.dart';
 
-/// Documentation for ParsedDirective.
+/// Model class representing a Systemd directive parsed from manual pages.
 class ParsedDirective {
+  /// Name of the directive (e.g., ProtectSystem).
   final String directive;
+  /// Formatted explanation in Markdown.
   final String explanationMarkdown;
+  /// Code snippet demonstrating how to configure the directive.
   final String snippet;
 
+  /// Constructor for [ParsedDirective].
   ParsedDirective({
     required this.directive,
     required this.explanationMarkdown,
@@ -24,7 +28,7 @@ class ParsedDirective {
   });
 }
 
-/// Documentation for ManParserService.
+/// Service class that parses systemd directive manuals using `pandoc`.
 class ManParserService {
   final List<String> targetManPages = [
     'systemd.exec',
@@ -41,7 +45,6 @@ class ManParserService {
     int total = targetManPages.length;
     int current = 0;
 
-    /// Documentation for for.
     for (String page in targetManPages) {
       try {
         // Find man page path
@@ -69,7 +72,6 @@ class ManParserService {
               .join();
           final exitCode = await pandocProcess.exitCode;
 
-          /// Documentation for if.
           if (exitCode == 0) {
             allDirectives.addAll(_parseMarkdown(pandocOutput));
           }
@@ -81,7 +83,6 @@ class ManParserService {
             'markdown',
             path,
           ]);
-          /// Documentation for if.
           if (pandocResult.exitCode == 0) {
             allDirectives.addAll(_parseMarkdown(pandocResult.stdout as String));
           }
@@ -90,7 +91,6 @@ class ManParserService {
         LogService.error('Error parsing man page $page: $e');
       }
       current++;
-      /// Documentation for if.
       if (onProgress != null) {
         onProgress(current / total);
       }
@@ -99,6 +99,7 @@ class ManParserService {
     return allDirectives;
   }
 
+  /// Parse the markdown text content converted from the manual page.
   List<ParsedDirective> _parseMarkdown(String markdown) {
     List<ParsedDirective> parsed = [];
     final lines = markdown.split('\n');
@@ -109,10 +110,8 @@ class ManParserService {
     // Regex to match *DirectiveName=* or similar headers.
     final directiveRegex = RegExp(r'^\*([A-Za-z0-9]+)=\*$');
 
-    /// Documentation for for.
     for (var line in lines) {
       final match = directiveRegex.firstMatch(line.trim());
-      /// Documentation for if.
       if (match != null) {
         // Save previous if exists
         if (currentDirective != null && currentExplanation.isNotEmpty) {
@@ -141,7 +140,6 @@ class ManParserService {
         currentDirective = null;
         currentExplanation = [];
       } else {
-        /// Documentation for if.
         if (currentDirective != null) {
           // Clean up blockquote markers inserted by pandoc
           currentExplanation.add(line.replaceFirst(RegExp(r'^>\s?'), ''));

@@ -15,8 +15,10 @@ import '../database.dart';
 import 'legal.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// Documentation for AboutScreen.
+/// Screen widget that displays general information, features, licensing, and
+/// system manual page synchronization controls for SysdSafe.
 class AboutScreen extends StatelessWidget {
+  /// Constructor for [AboutScreen].
   const AboutScreen({super.key});
 
   @override
@@ -127,7 +129,6 @@ class AboutScreen extends StatelessWidget {
                         ),
                       );
                       await DatabaseHelper.instance.syncDatabase();
-                      /// Documentation for if.
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Sync complete!')),
@@ -149,6 +150,7 @@ class AboutScreen extends StatelessWidget {
     );
   }
 
+  /// Build a horizontal row representing a feature description and its icon.
   Widget _buildFeatureItem(BuildContext context, IconData icon, String text) {
     final appState = Provider.of<AppState>(context, listen: false);
     final isDark = Theme.of(context).brightness == Brightness.dark;

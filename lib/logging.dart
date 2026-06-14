@@ -11,7 +11,9 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 
-/// Documentation for LogService.
+/// Service class that provides centralized logging for the SysdSafe application.
+///
+/// Writes formatted messages to a local file in the state directory and standard console.
 class LogService {
   static final LogService _instance = LogService._internal();
   factory LogService() => _instance;
@@ -19,7 +21,10 @@ class LogService {
 
   File? _logFile;
 
-  /// Documentation for init.
+  /// Initialize the logging service.
+  ///
+  /// Resolves the home state directory (~/.local/state/sysdsafe), creating it if
+  /// needed, and establishes the target log file handle.
   Future<void> init() async {
     final homeDir = Platform.environment['HOME'] ?? '/root';
     final stateDir = Directory('$homeDir/.local/state/sysdsafe');
@@ -42,22 +47,22 @@ class LogService {
     }
   }
 
-  /// Documentation for info.
+  /// Log an information message.
   static void info(String message) {
     _instance._log('INFO', message);
   }
 
-  /// Documentation for warning.
+  /// Log a warning message.
   static void warning(String message) {
     _instance._log('WARN', message);
   }
 
-  /// Documentation for error.
+  /// Log an error message.
   static void error(String message) {
     _instance._log('ERROR', message);
   }
 
-  /// Documentation for getLogContents.
+  /// Read and return the complete contents of the application log file.
   static Future<String> getLogContents() async {
     if (_instance._logFile != null && await _instance._logFile!.exists()) {
       return await _instance._logFile!.readAsString();
