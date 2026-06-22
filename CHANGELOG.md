@@ -4,6 +4,39 @@ All notable changes to the SysdSafe project are documented in this file. This pr
 
 ---
 
+## [1.0.5] - 2026-06-22
+
+### Fixed
+- **Byte-exact drop-in writes (P0):** Replaced `printf "%b"` with `printf '%s'`
+  (and real newlines) when writing override configs. `%b` interpreted backslash
+  escapes and treated `%` as a format specifier, which would silently corrupt
+  any directive containing a `%` specifier (e.g. `%t`, `%i`) or a backslash.
+- **Audit file location:** `hardening_audit.json` and the generated viewer now
+  write to `$XDG_STATE_HOME/sysdsafe` (`~/.local/state/sysdsafe`) instead of a
+  path relative to the current working directory, which was undefined for an
+  installed `.deb` launched from the menu.
+
+### Added
+- **Named Polkit action:** Apply/revert now run through a root helper
+  (`/usr/lib/sysdsafe/sysdsafe-helper`) bound to the
+  `online.nordheim.sysdsafe.manage-service` Polkit action, giving users a clear
+  authorization prompt instead of an opaque "sh wants to run as root". A
+  development fallback keeps `flutter run` working without installation.
+- **Post-apply health check:** After hardening a running service, SysdSafe
+  checks `is-active`/`is-failed` and proactively offers one-click revert if the
+  service degraded.
+- **Unit tests:** Coverage for `systemd-analyze` JSON parsing, service-name
+  validation, and drop-in content generation.
+
+### Changed
+- **Version is now single-sourced from `pubspec.yaml`** (1.0.5). `package_deb.sh`
+  no longer auto-increments `scripts/.version`, ending the version drift across
+  pubspec / `.version` / tag / `.deb`.
+- Repo hygiene: removed committed release artifacts and a stray `test.cpp`;
+  release artifacts now belong in GitHub Releases.
+
+---
+
 ## [1.0.2] - 2026-06-09
 
 ### Added

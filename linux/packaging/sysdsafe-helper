@@ -1,0 +1,67 @@
+#!/bin/bash
+#
+# sysdsafe-helper - privileged helper for SysdSafe.
+#
+# Invoked as root via `pkexec` against the polkit action
+# online.nordheim.sysdsafe.manage-service. It performs ONLY the two narrow
+# operations the GUI needs (apply / revert a Tier-1 drop-in) with strict input
+# validation. It never evaluates user input as code.
+#
+# Installed to /usr/lib/sysdsafe/sysdsafe-helper, owned root:root, mode 0755.
+#
+set -euo pipefail
+
+die() { echo "sysdsafe-helper: $*" >&2; exit 1; }
+
+# Reject empty unit names and anything containing a path separator or parent ref.
+valid_unit() {
+  case "$1" in
+    "" | */* | *..*) return 1 ;;
+    *) return 0 ;;
+  esac
+}
+
+# The drop-in directory must live directly under /etc/systemd/system and end in .d
+valid_dropin_dir() {
+  case "$1" in
+    *..*) return 1 ;;
+    /etc/systemd/system/*.d) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+# The drop-in file must be our exact override file inside such a directory.
+valid_dropin_path() {
+  case "$1" in
+    *..*) return 1 ;;
+    /etc/systemd/system/*.d/sysdsafe-tier1.conf) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+cmd="${1:-}"
+case "$cmd" in
+  apply)
+    dir="${2:-}"; file="${3:-}"; unit="${4:-}"; content="${5:-}"
+    valid_unit "$unit"        || die "invalid unit name"
+    valid_dropin_dir "$dir"   || die "invalid drop-in directory"
+    valid_dropin_path "$file" || die "invalid drop-in file path"
+    mkdir -p -- "$dir"
+    # printf '%s' writes bytes exactly: no backslash-escape or %-specifier
+    # interpretation (the whole reason this helper exists).
+    printf '%s' "$content" > "$file"
+    systemctl daemon-reload
+    systemctl try-restart -- "$unit"
+    ;;
+  revert)
+    file="${2:-}"; unit="${3:-}"
+    valid_unit "$unit"        || die "invalid unit name"
+    valid_dropin_path "$file" || die "invalid drop-in file path"
+    rm -f -- "$file"
+    systemctl daemon-reload
+    systemctl try-restart -- "$unit"
+    ;;
+  *)
+    die "unknown command: ${cmd:-<none>}"
+    ;;
+esac

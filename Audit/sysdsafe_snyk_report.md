@@ -9,6 +9,15 @@ A security audit of the SysdSafe application was conducted using the Snyk develo
 
 The scan confirmed that the first-party Dart/Flutter source code is completely clean. One low-severity issue was found in a third-party dependency.
 
+## Scope & Limitations
+
+This report covers **dependency CVEs (SCA)** and **generic code-pattern issues (SAST)**. It is *not* a verdict on the correctness of SysdSafe's privileged hardening logic. In particular, Snyk did not (and could not) catch two correctness issues found during manual review and fixed in 1.0.5:
+
+- the `printf "%b"` drop-in write, which could corrupt directives containing `%` specifiers or backslashes (P0-#1); and
+- the audit file being written relative to the current working directory (P1-#2).
+
+Treat the clean SAST/SCA result as "no known-vulnerable dependencies or obvious unsafe patterns," not as an assurance that the privileged file-writing and service-restart behavior is correct — that is covered by manual review and the unit tests under `test/`.
+
 ## Scan Details
 
 ### 1. Snyk Code Scan (SAST)

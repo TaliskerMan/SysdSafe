@@ -20,6 +20,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'state.dart';
 import 'scanner.dart';
 import 'logging.dart';
+import 'paths.dart';
 import 'ui/dashboard.dart';
 import 'ui/service_list.dart';
 import 'ui/about.dart';
@@ -169,7 +170,7 @@ class _MainScreenState extends State<MainScreen> {
   /// HTML viewer template asset, writes the output to disk, and opens it in the browser.
   Future<void> _openAuditViewer() async {
     try {
-      final auditDir = Directory(p.join(Directory.current.path, 'Audit'));
+      final auditDir = await sysdsafeStateDir();
       final auditFile = File(p.join(auditDir.path, 'hardening_audit.json'));
       String jsonData = '[]';
       if (await auditFile.exists()) {
@@ -188,11 +189,8 @@ class _MainScreenState extends State<MainScreen> {
         jsonData,
       );
 
-      // Write to a file inside Audit/
+      // Write the generated viewer next to the audit JSON in the state dir.
       final viewerFile = File(p.join(auditDir.path, 'audit_viewer.html'));
-      if (!await auditDir.exists()) {
-        await auditDir.create(recursive: true);
-      }
       await viewerFile.writeAsString(htmlContent);
 
       // Open in default browser

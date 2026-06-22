@@ -44,6 +44,10 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Debian packaging
+# Debian packaging & release artifacts (publish to GitHub Releases, not git)
 *.deb
+*.deb.asc
+*.deb.sig
+*.deb.sha256
+*.deb.sha512
 sysdsafe_*_amd64/

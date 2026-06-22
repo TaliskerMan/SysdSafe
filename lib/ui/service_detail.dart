@@ -17,6 +17,14 @@ import '../engine/recommendations.dart';
 import '../state.dart';
 import '../database.dart';
 import '../logging.dart';
+import '../hardening.dart';
+
+/// Absolute path to the installed privileged helper. When present (i.e. the
+/// `.deb` is installed), apply/revert run `pkexec <helper> ...`, which polkit
+/// matches to the named `online.nordheim.sysdsafe.*` actions so the user sees a
+/// clear authorization prompt. When absent (e.g. `flutter run` during
+/// development), we fall back to an inline, injection-safe `pkexec sh -c`.
+const String kSysdSafeHelper = '/usr/lib/sysdsafe/sysdsafe-helper';
 
 /// A screen displaying details, analyzed vulnerabilities, and hardening recommendations
 /// for a specific systemd service.
@@ -61,9 +69,9 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
     final serviceName = widget.service.name;
 
     // ShadowAgent Rule: Input Validation & Path Traversal Prevention
-    // Explicitly reject any service names containing directory separators or parent paths
-    // to guarantee that no arbitrary files are targeted.
-    if (serviceName.contains('/') || serviceName.contains('..')) {
+    // Reject service names containing directory separators or parent paths so
+    // no arbitrary files can be targeted.
+    if (!Hardening.isSafeServiceName(serviceName)) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Error: Invalid service name format.')),
@@ -74,6 +82,10 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
 
     final dirPath = '/etc/systemd/system/$serviceName.d';
     final filePath = '$dirPath/sysdsafe-tier1.conf';
+
+    // Capture whether the unit is running now, so we can tell afterwards
+    // whether hardening degraded a previously-healthy service.
+    final wasActive = await _isServiceActive(serviceName);
 
     setState(() => isLoading = true);
 
@@ -125,29 +137,18 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
       return; // Do NOT proceed if backup fails
     }
 
-    String fileContent = '[Service]\\n';
-    for (var advice in tier1Advice) {
-      fileContent += '${advice.snippet}\\n';
-    }
-
-    // ShadowAgent Rule: Prevent Shell Injection & Command Execution vulnerabilities
-    // Do NOT interpolate user-controlled variables (like serviceName) directly into shell strings.
-    // Instead, pass them as positional arguments ($1, $2, etc.) to the `sh -c` script to guarantee safe handling by the OS.
-    // Use '--' with systemctl to prevent option injection if the service name starts with a hyphen.
-    final command =
-        'mkdir -p "\$1" && printf "%b\\n" "\$2" > "\$3" && systemctl daemon-reload && systemctl try-restart -- "\$4"';
+    // Build the drop-in body with REAL newlines so it is written byte-for-byte.
+    final fileContent = Hardening.buildDropInContent(tier1Advice);
 
     try {
-      final result = await Process.run('pkexec', [
-        'sh',
-        '-c',
-        command,
-        '--',
-        dirPath,
-        fileContent,
-        filePath,
-        serviceName,
-      ]);
+      final result = await _runPrivileged(
+        helperArgs: ['apply', dirPath, filePath, serviceName, fileContent],
+        // Dev fallback: inline, injection-safe script. Uses printf '%s' (NOT
+        // '%b') so '%' specifiers and backslashes in the content are preserved.
+        fallbackScript:
+            'mkdir -p "\$1" && printf "%s" "\$2" > "\$3" && systemctl daemon-reload && systemctl try-restart -- "\$4"',
+        fallbackArgs: [dirPath, fileContent, filePath, serviceName],
+      );
       if (result.exitCode == 0) {
         LogService.info('Auto-Fix applied successfully for $serviceName');
         if (mounted) {
@@ -157,6 +158,9 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
             ),
           );
         }
+        // P1-#4: close the safety loop — confirm the service is healthy, and
+        // proactively offer one-click revert if hardening degraded it.
+        await _verifyHealthAndOfferRevert(serviceName, wasActive);
       } else {
         LogService.error('Auto-Fix failed for $serviceName: ${result.stderr}');
         if (mounted) {
@@ -175,13 +179,84 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
     await _loadDetails();
   }
 
+  /// Runs a privileged operation. Prefers the installed polkit helper
+  /// (`pkexec <helper> ...`), falling back to an inline `pkexec sh -c` script
+  /// when the helper is not installed (development).
+  Future<ProcessResult> _runPrivileged({
+    required List<String> helperArgs,
+    required String fallbackScript,
+    required List<String> fallbackArgs,
+  }) async {
+    if (File(kSysdSafeHelper).existsSync()) {
+      return Process.run('pkexec', [kSysdSafeHelper, ...helperArgs]);
+    }
+    // ShadowAgent Rule: never interpolate user-controlled values into the
+    // script; pass them as positional arguments after `--`.
+    return Process.run('pkexec', [
+      'sh',
+      '-c',
+      fallbackScript,
+      '--',
+      ...fallbackArgs,
+    ]);
+  }
+
+  /// Returns true if the given unit is currently `active`. Read-only and
+  /// unprivileged; used to detect post-hardening degradation.
+  Future<bool> _isServiceActive(String serviceName) async {
+    try {
+      final r = await Process.run('systemctl', ['is-active', '--', serviceName]);
+      return r.stdout.toString().trim() == 'active';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// After an apply, checks whether a previously-active service is now failed or
+  /// inactive and, if so, surfaces a one-tap revert action.
+  Future<void> _verifyHealthAndOfferRevert(
+    String serviceName,
+    bool wasActive,
+  ) async {
+    if (!wasActive) return; // Nothing to degrade if it wasn't running.
+
+    bool failed = false;
+    try {
+      final isFailed =
+          await Process.run('systemctl', ['is-failed', '--', serviceName]);
+      // `is-failed` prints "failed" and exits 0 when the unit has failed.
+      if (isFailed.stdout.toString().trim() == 'failed') failed = true;
+    } catch (_) {}
+
+    final stillActive = await _isServiceActive(serviceName);
+    if (!failed && stillActive) return; // Healthy — nothing to do.
+
+    LogService.error(
+      'Service $serviceName is no longer healthy after hardening '
+      '(failed=$failed, active=$stillActive). Offering revert.',
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('"$serviceName" did not stay healthy after hardening.'),
+        duration: const Duration(seconds: 12),
+        backgroundColor: Colors.red.shade700,
+        action: SnackBarAction(
+          label: 'Revert now',
+          textColor: Colors.white,
+          onPressed: _revertAutoFix,
+        ),
+      ),
+    );
+  }
+
   /// Reverts any automatically applied Tier 1 hardening configuration by removing the
   /// corresponding configuration file and reloading/restarting the service.
   Future<void> _revertAutoFix() async {
     final serviceName = widget.service.name;
 
     // ShadowAgent Rule: Input Validation & Path Traversal Prevention
-    if (serviceName.contains('/') || serviceName.contains('..')) {
+    if (!Hardening.isSafeServiceName(serviceName)) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Error: Invalid service name format.')),
@@ -192,22 +267,16 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
 
     final filePath = '/etc/systemd/system/$serviceName.d/sysdsafe-tier1.conf';
 
-    // ShadowAgent Rule: Prevent Shell Injection & Command Execution vulnerabilities
-    // Use positional arguments to safely pass file paths and service names to pkexec.
-    // Use '--' with systemctl and rm to prevent option injection.
-    final command =
-        'rm -f -- "\$1" && systemctl daemon-reload && systemctl try-restart -- "\$2"';
-
     setState(() => isLoading = true);
     try {
-      final result = await Process.run('pkexec', [
-        'sh',
-        '-c',
-        command,
-        '--',
-        filePath,
-        serviceName,
-      ]);
+      final result = await _runPrivileged(
+        helperArgs: ['revert', filePath, serviceName],
+        // Dev fallback: injection-safe inline script ('--' guards option
+        // injection on both rm and systemctl).
+        fallbackScript:
+            'rm -f -- "\$1" && systemctl daemon-reload && systemctl try-restart -- "\$2"',
+        fallbackArgs: [filePath, serviceName],
+      );
       if (result.exitCode == 0) {
         LogService.info('Auto-Fix reverted successfully for $serviceName');
         if (mounted) {
