@@ -44,6 +44,9 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Stray scratch file (not part of the Dart/Flutter project)
+/test.cpp
+
 # Debian packaging & release artifacts (publish to GitHub Releases, not git)
 *.deb
 *.deb.asc
