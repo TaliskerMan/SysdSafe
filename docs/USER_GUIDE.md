@@ -6,7 +6,7 @@ SysdSafe's core philosophy is **"First, do no harm."** Systemd manages your Linu
 
 > [!IMPORTANT]
 > **Polkit Authorization & Least Privilege**
-> SysdSafe does **not** run as root. The GUI process runs entirely within unprivileged user space. When applying system changes, SysdSafe invokes Polkit (`pkexec`) to escalate permissions surgically, verifying credentials only for writing configuration drop-in files to `/etc/systemd/system/`.
+> SysdSafe does **not** run as root. The GUI process runs entirely within unprivileged user space. When applying system changes, SysdSafe invokes Polkit via a dedicated root helper (`/usr/lib/sysdsafe/sysdsafe-helper`) bound to the `online.nordheim.sysdsafe.manage-service` action. This provides a clear, transparent authorization prompt for writing configuration drop-in files to `/etc/systemd/system/`.
 
 ---
 
@@ -58,7 +58,7 @@ To ensure system stability, SysdSafe employs an atomic backup and restore engine
 ```mermaid
 graph TD
     Start([1. Apply Auto-Fix Triggered]) --> Backup[2. Archive original service configuration to ~/sysdsafe_backups/]
-    Backup --> Polkit{3. Prompt User for Root authorization via pkexec}
+    Backup --> Polkit{3. Prompt User for Root authorization via named Polkit action}
     Polkit -- Approved --> WriteDropIn[4. Write hardening drop-in override to /etc/systemd/system/]
     Polkit -- Denied --> Abort[5. Hardening cancelled - no settings modified]
     WriteDropIn --> Reload[6. Execute systemctl daemon-reload & restart service]
@@ -72,6 +72,9 @@ graph TD
     RestoreBackup --> Reload2[11. Execute systemctl daemon-reload & restart service]
     Reload2 --> NormalState([Service returned to initial state])
 ```
+
+> [!TIP]
+> **Post-Apply Health Check**: After hardening a running service, SysdSafe automatically checks its status (`is-active`/`is-failed`). If the service degrades or crashes, SysdSafe proactively offers a one-click revert to instantly undo the changes.
 
 ---
 
@@ -94,6 +97,7 @@ SysdSafe utilizes the following package layout:
 SysdSafe tracks operations (audits, fixes, reverts) to a local app log file.
 
 *   **Log Destination Path:** `~/.local/state/sysdsafe/app.log`.
+*   **Audit File Path:** `~/.local/state/sysdsafe/hardening_audit.json`.
 *   **In-App Auditor:** View trace entries in real-time in the **Logs** tab.
 *   **Support Portal:** If a service fails to restore, navigate to the **Logs** tab and tap **Email Support**. Your default mail system will load with pre-filled support destination fields. Manually attach `~/sysdsafe_backups/` and `app.log` so our team can debug the environment.
 
@@ -105,7 +109,7 @@ SysdSafe compiles, checksums, and signs release files automatically via internal
 
 ```mermaid
 graph TD
-    StartPipeline([Start: package_deb.sh]) --> Version[1. Auto-increment patch version via scripts/.version]
+    StartPipeline([Start: package_deb.sh]) --> Version[1. Read version dynamically from pubspec.yaml]
     Version --> Build[2. Compile Flutter Linux release target]
     Build --> Struct[3. Build Debian folders: DEBIAN, bin, opt, share/applications, pixmaps]
     Struct --> Wrapper[4. Create /usr/bin/sysdsafe wrapper script]

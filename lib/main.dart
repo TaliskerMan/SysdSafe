@@ -200,8 +200,8 @@ class _MainScreenState extends State<MainScreen> {
       } else {
         LogService.error('Could not launch browser for $uri');
       }
-    } catch (e) {
-      LogService.error('Error opening audit viewer: $e');
+    } catch (error) {
+      LogService.error('Error opening audit viewer: $error');
     }
   }
 

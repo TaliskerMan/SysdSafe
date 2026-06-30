@@ -126,11 +126,11 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
           'Systemctl cat failed. Aborting auto-fix to ensure system safety.',
         );
       }
-    } catch (e) {
-      LogService.error('Backup failed for $serviceName: $e');
+    } catch (error) {
+      LogService.error('Backup failed for $serviceName: $error');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Auto-Fix aborted due to backup failure: $e')),
+          SnackBar(content: Text('Auto-Fix aborted due to backup failure: $error')),
         );
       }
       setState(() => isLoading = false);
@@ -169,11 +169,11 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
           ).showSnackBar(SnackBar(content: Text('Failed: ${result.stderr}')));
         }
       }
-    } catch (e) {
+    } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ).showSnackBar(SnackBar(content: Text('Error: $error')));
       }
     }
     await _loadDetails();
@@ -205,8 +205,8 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
   /// unprivileged; used to detect post-hardening degradation.
   Future<bool> _isServiceActive(String serviceName) async {
     try {
-      final r = await Process.run('systemctl', ['is-active', '--', serviceName]);
-      return r.stdout.toString().trim() == 'active';
+      final result = await Process.run('systemctl', ['is-active', '--', serviceName]);
+      return result.stdout.toString().trim() == 'active';
     } catch (_) {
       return false;
     }
@@ -297,12 +297,12 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
           );
         }
       }
-    } catch (e) {
-      LogService.error('Revert execution error for $serviceName: $e');
+    } catch (error) {
+      LogService.error('Revert execution error for $serviceName: $error');
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ).showSnackBar(SnackBar(content: Text('Error: $error')));
       }
     }
     await _loadDetails();

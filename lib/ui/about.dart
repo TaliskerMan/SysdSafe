@@ -12,8 +12,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../state.dart';
 import '../database.dart';
-import 'legal.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'widgets/page_container.dart';
 
 /// Screen widget that displays general information, features, licensing, and
 /// system manual page synchronization controls for SysdSafe.
@@ -25,19 +25,9 @@ class AboutScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
 
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'About SysdSafe',
-            style: TextStyle(
-              fontSize: appState.fontSizeBase + 10,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 24),
+    return PageContainer(
+      title: 'About SysdSafe',
+      children: [
           Card(
             elevation: 2,
             shape: RoundedRectangleBorder(
@@ -142,11 +132,7 @@ class AboutScreen extends StatelessWidget {
                     ),
                   ),
                 ],
-              ),
-            ),
-          ),
-        ],
-      ),
+      ],
     );
   }
 

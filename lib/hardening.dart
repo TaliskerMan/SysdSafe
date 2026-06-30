@@ -33,8 +33,8 @@ class Hardening {
   /// specifier (e.g. `%t`, `%i`) or a backslash.
   static String buildDropInContent(List<HardeningAdvice> advice) {
     final buffer = StringBuffer('[Service]\n');
-    for (final a in advice) {
-      buffer.writeln(a.snippet);
+    for (final item in advice) {
+      buffer.writeln(item.snippet);
     }
     return buffer.toString();
   }

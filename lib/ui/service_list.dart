@@ -97,7 +97,7 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
               DropdownButton<String>(
                 value: filterLevel,
                 items: ['ALL', 'UNSAFE', 'EXPOSED', 'MEDIUM', 'OK']
-                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                    .map((element) => DropdownMenuItem(value: element, child: Text(element)))
                     .toList(),
                 onChanged: (val) {
                   setState(() {

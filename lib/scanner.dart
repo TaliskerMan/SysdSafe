@@ -73,8 +73,8 @@ class SystemdScanner {
 
         services = parseSecurityList(stdout);
       }
-    } catch (e) {
-      LogService.error('Error scanning services: $e');
+    } catch (error) {
+      LogService.error('Error scanning services: $error');
     }
     return services;
   }
@@ -112,8 +112,8 @@ class SystemdScanner {
       if (result.exitCode == 0) {
         vulnerabilities = parseServiceDetails(result.stdout as String);
       }
-    } catch (e) {
-      LogService.error('Error getting service details: $e');
+    } catch (error) {
+      LogService.error('Error getting service details: $error');
     }
     return vulnerabilities;
   }

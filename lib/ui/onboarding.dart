@@ -48,7 +48,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           _hasPandoc = true;
         });
       }
-    } catch (e) {
+    } catch (error) {
       // Pandoc not found
     }
     setState(() {

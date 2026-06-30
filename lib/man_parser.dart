@@ -87,8 +87,8 @@ class ManParserService {
             allDirectives.addAll(_parseMarkdown(pandocResult.stdout as String));
           }
         }
-      } catch (e) {
-        LogService.error('Error parsing man page $page: $e');
+      } catch (error) {
+        LogService.error('Error parsing man page $page: $error');
       }
       current++;
       if (onProgress != null) {

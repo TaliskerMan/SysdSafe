@@ -63,10 +63,10 @@ class _LogsScreenState extends State<LogsScreen> {
       if (!await launchUrl(emailLaunchUri)) {
         throw Exception('Could not launch email client.');
       }
-    } catch (e) {
+    } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to open email client: $e')),
+          SnackBar(content: Text('Failed to open email client: $error')),
         );
       }
     }

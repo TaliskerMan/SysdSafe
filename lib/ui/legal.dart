@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
 import '../state.dart';
+import 'widgets/page_container.dart';
 
 /// Screen widget that displays the application license terms and copyright information.
 class LegalScreen extends StatefulWidget {
@@ -47,20 +48,10 @@ class _LegalScreenState extends State<LegalScreen> {
     final appState = Provider.of<AppState>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Legal Information',
-            style: TextStyle(
-              fontSize: appState.fontSizeBase + 10,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Card(
+    return PageContainer(
+      title: 'Legal Information',
+      children: [
+        Card(
             elevation: 2,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
@@ -138,8 +129,7 @@ class _LegalScreenState extends State<LegalScreen> {
               ),
             ),
           ),
-        ],
-      ),
+      ],
     );
   }
 }
