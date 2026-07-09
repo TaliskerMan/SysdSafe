@@ -14,6 +14,7 @@ import '../state.dart';
 import '../database.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'widgets/page_container.dart';
+import 'legal.dart';
 
 /// Screen widget that displays general information, features, licensing, and
 /// system manual page synchronization controls for SysdSafe.
@@ -132,9 +133,12 @@ class AboutScreen extends StatelessWidget {
                     ),
                   ),
                 ],
-      ],
-    );
-  }
+              ),
+            ),
+          ),
+        ],
+      );
+    }
 
   /// Build a horizontal row representing a feature description and its icon.
   Widget _buildFeatureItem(BuildContext context, IconData icon, String text) {

@@ -14,19 +14,34 @@ echo "$VERSION" > scripts/.version
 
 echo "Building SysdSafe version $VERSION..."
 
-# Build Flutter App
-flutter build linux --release
+# Fix clang++ linker issue on some arm64/Linux environments
+if [ -d "/usr/lib/gcc/aarch64-linux-gnu/13" ]; then
+    export LIBRARY_PATH="/usr/lib/gcc/aarch64-linux-gnu/13:${LIBRARY_PATH:-}"
+fi
+if [ -d "/usr/include/c++/13" ]; then
+    export CPLUS_INCLUDE_PATH="/usr/include/c++/13:/usr/include/aarch64-linux-gnu/c++/13:${CPLUS_INCLUDE_PATH:-}"
+fi
+
+ARCH=$(dpkg --print-architecture)
+UNAME_M=$(uname -m)
+if [ "$UNAME_M" = "x86_64" ]; then
+    FLUTTER_ARCH="x64"
+elif [ "$UNAME_M" = "aarch64" ]; then
+    FLUTTER_ARCH="arm64"
+else
+    FLUTTER_ARCH="$UNAME_M"
+fi
 
 APP_NAME="sysdsafe"
-BUILD_DIR="build/linux/x64/release/bundle"
-DEB_DIR="${APP_NAME}_${VERSION}_amd64"
+BUILD_DIR="build/linux/${FLUTTER_ARCH}/release/bundle"
+DEB_DIR="${APP_NAME}_${VERSION}_${ARCH}"
 
 echo "Preparing DEB package directory: $DEB_DIR"
 rm -rf "$DEB_DIR"
 mkdir -p "$DEB_DIR/DEBIAN"
 mkdir -p "$DEB_DIR/usr/bin"
 mkdir -p "$DEB_DIR/usr/share/applications"
-mkdir -p "$DEB_DIR/usr/share/pixmaps"
+mkdir -p "$DEB_DIR/usr/share/icons/hicolor/256x256/apps"
 mkdir -p "$DEB_DIR/usr/lib/$APP_NAME"
 mkdir -p "$DEB_DIR/usr/share/polkit-1/actions"
 mkdir -p "$DEB_DIR/opt/$APP_NAME"
@@ -47,18 +62,19 @@ EOF
 chmod +x "$DEB_DIR/usr/bin/$APP_NAME"
 
 # Copy Icon
-cp assets/sysdsafe.png "$DEB_DIR/usr/share/pixmaps/$APP_NAME.png"
+cp assets/sysdsafe.png "$DEB_DIR/usr/share/icons/hicolor/256x256/apps/com.example.sysdsafe.png"
 
 # Create Desktop Entry
-cat <<EOF > "$DEB_DIR/usr/share/applications/$APP_NAME.desktop"
+cat <<EOF > "$DEB_DIR/usr/share/applications/com.example.sysdsafe.desktop"
 [Desktop Entry]
 Name=SysdSafe
 Comment=Systemd Service Security Hardening
 Exec=$APP_NAME
-Icon=$APP_NAME
+Icon=com.example.sysdsafe
 Terminal=false
 Type=Application
 Categories=Utility;System;Security;
+StartupWMClass=com.example.sysdsafe
 EOF
 
 # Create DEBIAN/control
@@ -67,9 +83,9 @@ Package: $APP_NAME
 Version: $VERSION
 Section: utils
 Priority: optional
-Architecture: amd64
+Architecture: ${ARCH}
 Depends: polkit | policykit-1, systemd
-Maintainer: SysdSafe Developers <maintainer@example.com>
+Maintainer: Chuck Talk <chuck@nordheim.online>
 Description: SysdSafe - Systemd Service Security Hardening Tool
  A Flutter application designed to audit and harden systemd services 
  using automated Polkit drop-in configurations.
@@ -84,7 +100,8 @@ chmod -R 755 "$DEB_DIR"
 echo "Building package..."
 dpkg-deb --root-owner-group --build "$DEB_DIR"
 
-echo "Package created: ${DEB_DIR}.deb"
+DEB_FILE="${APP_NAME}_${VERSION}_${ARCH}.deb"
+echo "Package created: ${DEB_FILE}"
 
 # Clean up build directory structure to leave only the DEB file
 rm -rf "$DEB_DIR"
