@@ -10,10 +10,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
-import '../logging.dart';
-import '../state.dart';
+import 'package:sysdsafe/logging.dart';
+import 'package:sysdsafe/state.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// A screen that displays the system and application logs to the user.
 ///
@@ -48,7 +48,7 @@ class _LogsScreenState extends State<LogsScreen> {
   /// Launches the user's default email app pre-populated with support details
   /// and the last 5000 characters of the application log.
   Future<void> _emailSupport() async {
-    final Uri emailLaunchUri = Uri(
+    final emailLaunchUri = Uri(
       scheme: 'mailto',
       path: 'support@nordheim.online',
       queryParameters: {
@@ -86,7 +86,7 @@ class _LogsScreenState extends State<LogsScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

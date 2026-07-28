@@ -9,35 +9,38 @@
 // but WITHOUT ANY WARRANTY. See the GNU AGPL v3 for details.
 
 import 'dart:io';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:path_provider/path_provider.dart';
+
 import 'package:path/path.dart';
-import 'man_parser.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sysdsafe/man_parser.dart';
 
 /// Representation of a systemd hardening directive and its description/snippet.
 class DirectiveExplanation {
-  /// Name of the Systemd hardening directive.
-  final String directive;
-  /// Explanation of the security benefits of the directive.
-  final String explanation;
-  /// Standard configuration snippet to enforce the directive.
-  final String snippet;
-
   /// Constructor for [DirectiveExplanation].
   DirectiveExplanation({
     required this.directive,
     required this.explanation,
     required this.snippet,
   });
+
+  /// Name of the Systemd hardening directive.
+  final String directive;
+
+  /// Explanation of the security benefits of the directive.
+  final String explanation;
+
+  /// Standard configuration snippet to enforce the directive.
+  final String snippet;
 }
 
 /// Helper class to initialize and perform database operations on Systemd hardening directives.
 class DatabaseHelper {
+  DatabaseHelper._init();
+
   /// Singleton instance of the [DatabaseHelper].
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
-
-  DatabaseHelper._init();
 
   /// Retrieve the SQLite [Database] instance, initializing it if necessary.
   Future<Database> get database async {
@@ -51,7 +54,7 @@ class DatabaseHelper {
     if (Platform.environment.containsKey('FLUTTER_TEST')) {
       sqfliteFfiInit();
       databaseFactory = databaseFactoryFfi;
-      return await databaseFactoryFfi.openDatabase(
+      return databaseFactoryFfi.openDatabase(
         inMemoryDatabasePath,
         options: OpenDatabaseOptions(version: 1, onCreate: _createDB),
       );
@@ -59,7 +62,7 @@ class DatabaseHelper {
     final dbPath = await getApplicationSupportDirectory();
     final path = join(dbPath.path, filePath);
 
-    return await databaseFactoryFfi.openDatabase(
+    return databaseFactoryFfi.openDatabase(
       path,
       options: OpenDatabaseOptions(version: 1, onCreate: _createDB),
     );
@@ -121,8 +124,8 @@ CREATE TABLE backups (
     }
 
     // Insert all parsed in a batch for efficiency
-    Batch batch = db.batch();
-    for (var pd in parsedDirectives) {
+    final batch = db.batch();
+    for (final pd in parsedDirectives) {
       batch.insert('directives', {
         'directive': pd.directive,
         'explanation': pd.explanationMarkdown,
@@ -150,9 +153,9 @@ CREATE TABLE backups (
 
     if (maps.isNotEmpty) {
       return DirectiveExplanation(
-        directive: maps.first['directive'] as String,
-        explanation: maps.first['explanation'] as String,
-        snippet: maps.first['snippet'] as String,
+        directive: maps.first['directive']! as String,
+        explanation: maps.first['explanation']! as String,
+        snippet: maps.first['snippet']! as String,
       );
     } else {
       return DirectiveExplanation(
@@ -208,7 +211,7 @@ CREATE TABLE backups (
     );
 
     if (maps.isNotEmpty) {
-      return maps.first['original_content'] as String;
+      return maps.first['original_content']! as String;
     }
     return null;
   }

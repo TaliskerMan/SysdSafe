@@ -13,9 +13,9 @@
 // privileged drop-in content (the byte-exact write that replaced printf %b).
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sysdsafe/scanner.dart';
-import 'package:sysdsafe/hardening.dart';
 import 'package:sysdsafe/engine/recommendations.dart';
+import 'package:sysdsafe/hardening.dart';
+import 'package:sysdsafe/scanner.dart';
 
 void main() {
   group('Hardening.isSafeServiceName', () {
@@ -50,9 +50,12 @@ void main() {
           snippet: 'ProtectKernelTunables=yes',
         ),
       ]);
-      expect(content, '[Service]\nNoNewPrivileges=yes\nProtectKernelTunables=yes\n');
+      expect(
+        content,
+        '[Service]\nNoNewPrivileges=yes\nProtectKernelTunables=yes\n',
+      );
       // No literal backslash-n must ever appear (the old %b bug).
-      expect(content.contains('\\n'), isFalse);
+      expect(content.contains(r'\n'), isFalse);
     });
 
     test('preserves % specifiers byte-for-byte', () {
@@ -86,7 +89,8 @@ void main() {
     });
 
     test('tolerates numeric exposure as well as string', () {
-      const json = '[{"unit":"a.service","exposure":3.1,"predicate":"OK","happy":"🙂"}]';
+      const json =
+          '[{"unit":"a.service","exposure":3.1,"predicate":"OK","happy":"🙂"}]';
       final services = SystemdScanner.parseSecurityList(json);
       expect(services.single.exposureScore, 3.1);
     });

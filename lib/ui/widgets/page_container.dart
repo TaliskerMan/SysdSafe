@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../state.dart';
+import 'package:sysdsafe/state.dart';
 
 class PageContainer extends StatelessWidget {
+  const PageContainer({
+    required this.title,
+    required this.children,
+    super.key,
+    this.padding = 24.0,
+  });
   final String title;
   final List<Widget> children;
   final double padding;
-
-  const PageContainer({
-    super.key,
-    required this.title,
-    required this.children,
-    this.padding = 24.0,
-  });
 
   @override
   Widget build(BuildContext context) {

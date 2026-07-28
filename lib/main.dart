@@ -9,27 +9,27 @@
 // SysdSafe is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY. See the GNU AGPL v3 for details.
 
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'dart:io';
-import 'package:path/path.dart' as p;
-import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter/services.dart' show rootBundle;
 
-import 'state.dart';
-import 'scanner.dart';
-import 'logging.dart';
-import 'paths.dart';
-import 'ui/dashboard.dart';
-import 'ui/service_list.dart';
-import 'ui/about.dart';
-import 'ui/legal.dart';
-import 'ui/reference_screen.dart';
-import 'ui/onboarding.dart';
-import 'ui/logs.dart';
-import 'database.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:google_fonts/google_fonts.dart';
+import 'package:path/path.dart' as p;
+import 'package:provider/provider.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sysdsafe/database.dart';
+import 'package:sysdsafe/logging.dart';
+import 'package:sysdsafe/paths.dart';
+import 'package:sysdsafe/scanner.dart';
+import 'package:sysdsafe/state.dart';
+import 'package:sysdsafe/ui/about.dart';
+import 'package:sysdsafe/ui/dashboard.dart';
+import 'package:sysdsafe/ui/legal.dart';
+import 'package:sysdsafe/ui/logs.dart';
+import 'package:sysdsafe/ui/onboarding.dart';
+import 'package:sysdsafe/ui/reference_screen.dart';
+import 'package:sysdsafe/ui/service_list.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -173,7 +173,7 @@ class _MainScreenState extends State<MainScreen> {
     try {
       final auditDir = await sysdsafeStateDir();
       final auditFile = File(p.join(auditDir.path, 'hardening_audit.json'));
-      String jsonData = '[]';
+      var jsonData = '[]';
       if (await auditFile.exists()) {
         jsonData = await auditFile.readAsString();
       } else {
@@ -182,11 +182,13 @@ class _MainScreenState extends State<MainScreen> {
       }
 
       // Read template from assets
-      final htmlTemplate = await rootBundle.loadString('assets/audit_viewer.html');
-      
+      final htmlTemplate = await rootBundle.loadString(
+        'assets/audit_viewer.html',
+      );
+
       // Inject JSON data
       final htmlContent = htmlTemplate.replaceFirst(
-        '/*INJECT_JSON_DATA*/[]/*END_INJECT_JSON_DATA*/', 
+        '/*INJECT_JSON_DATA*/[]/*END_INJECT_JSON_DATA*/',
         jsonData,
       );
 

@@ -13,7 +13,7 @@ import 'package:flutter/material.dart';
 /// Manages global application state, including active theme and base font size configurations.
 class AppState extends ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.system;
-  double _fontSizeBase = 14.0;
+  double _fontSizeBase = 14;
 
   ThemeMode get themeMode => _themeMode;
   double get fontSizeBase => _fontSizeBase;

@@ -8,19 +8,19 @@
 // SysdSafe is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY. See the GNU AGPL v3 for details.
 
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:fl_chart/fl_chart.dart';
-import '../scanner.dart';
-import '../state.dart';
+import 'package:sysdsafe/scanner.dart';
+import 'package:sysdsafe/state.dart';
 
 /// Screen widget that displays security exposure statistics and charts.
 class DashboardScreen extends StatefulWidget {
+  /// Constructor for [DashboardScreen].
+  const DashboardScreen({required this.services, super.key});
+
   /// The collection of scanned Systemd services.
   final List<SystemdService> services;
-
-  /// Constructor for [DashboardScreen].
-  const DashboardScreen({super.key, required this.services});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -41,7 +41,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final appState = Provider.of<AppState>(context);
 
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -62,7 +62,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(24.0),
+                    padding: const EdgeInsets.all(24),
                     child: Column(
                       children: [
                         Text(
@@ -90,7 +90,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(24.0),
+                    padding: const EdgeInsets.all(24),
                     child: Column(
                       children: [
                         Text(
@@ -223,7 +223,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     double baseFontSize,
   ) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
           Container(width: 16, height: 16, color: color),

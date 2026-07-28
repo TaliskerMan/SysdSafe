@@ -11,8 +11,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:provider/provider.dart';
-import '../state.dart';
-import '../database.dart';
+import 'package:sysdsafe/database.dart';
+import 'package:sysdsafe/state.dart';
 
 /// A screen that displays the systemd security directives reference.
 ///
@@ -45,9 +45,9 @@ class _ReferenceScreenState extends State<ReferenceScreen> {
     final directives = maps
         .map(
           (map) => DirectiveExplanation(
-            directive: map['directive'] as String,
-            explanation: map['explanation'] as String,
-            snippet: map['snippet'] as String,
+            directive: map['directive']! as String,
+            explanation: map['explanation']! as String,
+            snippet: map['snippet']! as String,
           ),
         )
         .toList();
@@ -78,7 +78,7 @@ class _ReferenceScreenState extends State<ReferenceScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -125,7 +125,7 @@ class _ReferenceScreenState extends State<ReferenceScreen> {
                           ),
                           children: [
                             Padding(
-                              padding: const EdgeInsets.all(16.0),
+                              padding: const EdgeInsets.all(16),
                               child: MarkdownBody(
                                 data: item.explanation,
                                 styleSheet: MarkdownStyleSheet(

@@ -8,10 +8,11 @@
 // SysdSafe is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY. See the GNU AGPL v3 for details.
 
-import 'package:flutter/material.dart';
 import 'dart:io';
-import '../database.dart';
-import '../main.dart';
+
+import 'package:flutter/material.dart';
+import 'package:sysdsafe/database.dart';
+import 'package:sysdsafe/main.dart';
 
 /// The onboarding and dependency-checking screen shown to the user on first launch.
 ///
@@ -28,7 +29,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   bool _isCheckingPandoc = true;
   bool _hasPandoc = false;
   bool _isSeeding = false;
-  double _progress = 0.0;
+  double _progress = 0;
 
   @override
   void initState() {
@@ -96,7 +97,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ),
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.all(24),
           child: _isCheckingPandoc
               ? const CircularProgressIndicator()
               : _isSeeding

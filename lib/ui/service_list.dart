@@ -10,18 +10,17 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../scanner.dart';
-import '../state.dart';
-import 'service_detail.dart';
+import 'package:sysdsafe/scanner.dart';
+import 'package:sysdsafe/state.dart';
+import 'package:sysdsafe/ui/service_detail.dart';
 
 /// A widget that displays a list of systemd services analyzed by the scanner.
 ///
 /// It supports dynamic filtering by service name and risk classification (e.g. UNSAFE, EXPOSED, OK).
 /// Services are sorted by urgency level (exposure level descending), then alphabetically.
 class ServiceListScreen extends StatefulWidget {
+  const ServiceListScreen({required this.services, super.key});
   final List<SystemdService> services;
-
-  const ServiceListScreen({super.key, required this.services});
 
   @override
   State<ServiceListScreen> createState() => _ServiceListScreenState();
@@ -51,7 +50,7 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
 
-    List<SystemdService> filtered = widget.services.where((s) {
+    final filtered = widget.services.where((s) {
       final matchesQuery = s.name.toLowerCase().contains(
         searchQuery.toLowerCase(),
       );
@@ -72,7 +71,7 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
     });
 
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(16),
       child: Column(
         children: [
           Row(
@@ -97,7 +96,12 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
               DropdownButton<String>(
                 value: filterLevel,
                 items: ['ALL', 'UNSAFE', 'EXPOSED', 'MEDIUM', 'OK']
-                    .map((element) => DropdownMenuItem(value: element, child: Text(element)))
+                    .map(
+                      (element) => DropdownMenuItem(
+                        value: element,
+                        child: Text(element),
+                      ),
+                    )
                     .toList(),
                 onChanged: (val) {
                   setState(() {

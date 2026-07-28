@@ -8,16 +8,17 @@
 // SysdSafe is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY. See the GNU AGPL v3 for details.
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:io';
 import 'package:provider/provider.dart';
-import '../scanner.dart';
-import '../engine/recommendations.dart';
-import '../state.dart';
-import '../database.dart';
-import '../logging.dart';
-import '../hardening.dart';
+import 'package:sysdsafe/database.dart';
+import 'package:sysdsafe/engine/recommendations.dart';
+import 'package:sysdsafe/hardening.dart';
+import 'package:sysdsafe/logging.dart';
+import 'package:sysdsafe/scanner.dart';
+import 'package:sysdsafe/state.dart';
 
 /// Absolute path to the installed privileged helper. When present (i.e. the
 /// `.deb` is installed), apply/revert run `pkexec <helper> ...`, which polkit
@@ -32,9 +33,8 @@ const String kSysdSafeHelper = '/usr/lib/sysdsafe/sysdsafe-helper';
 /// It supports manual hardening copy/paste snippets, automated low-risk tier-1
 /// hardening via [Process.run] (with safety backups), and reversion of fixes.
 class ServiceDetailScreen extends StatefulWidget {
+  const ServiceDetailScreen({required this.service, super.key});
   final SystemdService service;
-
-  const ServiceDetailScreen({super.key, required this.service});
 
   @override
   State<ServiceDetailScreen> createState() => _ServiceDetailScreenState();
@@ -130,7 +130,9 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
       LogService.error('Backup failed for $serviceName: $error');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Auto-Fix aborted due to backup failure: $error')),
+          SnackBar(
+            content: Text('Auto-Fix aborted due to backup failure: $error'),
+          ),
         );
       }
       setState(() => isLoading = false);
@@ -146,7 +148,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
         // Dev fallback: inline, injection-safe script. Uses printf '%s' (NOT
         // '%b') so '%' specifiers and backslashes in the content are preserved.
         fallbackScript:
-            'mkdir -p "\$1" && printf "%s" "\$2" > "\$3" && systemctl daemon-reload && systemctl try-restart -- "\$4"',
+            r'mkdir -p "$1" && printf "%s" "$2" > "$3" && systemctl daemon-reload && systemctl try-restart -- "$4"',
         fallbackArgs: [dirPath, fileContent, filePath, serviceName],
       );
       if (result.exitCode == 0) {
@@ -205,7 +207,11 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
   /// unprivileged; used to detect post-hardening degradation.
   Future<bool> _isServiceActive(String serviceName) async {
     try {
-      final result = await Process.run('systemctl', ['is-active', '--', serviceName]);
+      final result = await Process.run('systemctl', [
+        'is-active',
+        '--',
+        serviceName,
+      ]);
       return result.stdout.toString().trim() == 'active';
     } catch (_) {
       return false;
@@ -220,10 +226,13 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
   ) async {
     if (!wasActive) return; // Nothing to degrade if it wasn't running.
 
-    bool failed = false;
+    var failed = false;
     try {
-      final isFailed =
-          await Process.run('systemctl', ['is-failed', '--', serviceName]);
+      final isFailed = await Process.run('systemctl', [
+        'is-failed',
+        '--',
+        serviceName,
+      ]);
       // `is-failed` prints "failed" and exits 0 when the unit has failed.
       if (isFailed.stdout.toString().trim() == 'failed') failed = true;
     } catch (_) {}
@@ -274,7 +283,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
         // Dev fallback: injection-safe inline script ('--' guards option
         // injection on both rm and systemctl).
         fallbackScript:
-            'rm -f -- "\$1" && systemctl daemon-reload && systemctl try-restart -- "\$2"',
+            r'rm -f -- "$1" && systemctl daemon-reload && systemctl try-restart -- "$2"',
         fallbackArgs: [filePath, serviceName],
       );
       if (result.exitCode == 0) {
@@ -285,7 +294,6 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
               content: Text(
                 'Auto-Fix reverted! Original config available in ~/sysdsafe_backups/',
               ),
-              duration: Duration(seconds: 4),
             ),
           );
         }
@@ -314,14 +322,14 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Group vulnerabilities by Tier
-    final Map<int, List<HardeningAdvice>> tieredAdvice = {1: [], 2: [], 3: []};
+    final tieredAdvice = <int, List<HardeningAdvice>>{1: [], 2: [], 3: []};
 
-    for (var vuln in vulnerabilities) {
+    for (final vuln in vulnerabilities) {
       final advice = RecommendationEngine.getAdvice(vuln.name);
       tieredAdvice[advice.tier]?.add(advice);
     }
 
-    final bool isDangerousService =
+    final isDangerousService =
         widget.service.name.startsWith('user@') ||
         widget.service.name.contains('greeter');
 
@@ -330,18 +338,18 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16),
               child: CustomScrollView(
                 slivers: [
                   SliverToBoxAdapter(
                     // ShadowAgent Rule: "First, do no harm".
                     // Provide a persistent warning so users don't break their entire system at once.
                     child: Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
+                      padding: const EdgeInsets.only(bottom: 16),
                       child: Card(
                         color: isDark ? Colors.amber[900] : Colors.amber[100],
                         child: Padding(
-                          padding: const EdgeInsets.all(16.0),
+                          padding: const EdgeInsets.all(16),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -374,7 +382,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                         ? Card(
                             color: isDark ? Colors.red[900] : Colors.red[100],
                             child: Padding(
-                              padding: const EdgeInsets.all(16.0),
+                              padding: const EdgeInsets.all(16),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -416,7 +424,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                         : Card(
                             color: isDark ? Colors.grey[850] : Colors.blue[50],
                             child: Padding(
-                              padding: const EdgeInsets.all(16.0),
+                              padding: const EdgeInsets.all(16),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -446,19 +454,20 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
 
                   // Tier 1
                   if (tieredAdvice[1]!.isNotEmpty) ...[
-                    isDangerousService
-                        ? _buildTierHeader(
-                            'Tier 1: Quick Wins (Low Risk) - AUTO-FIX DISABLED',
-                            Colors.green,
-                            appState,
-                          )
-                        : _buildTierHeaderWithActions(
-                            'Tier 1: Quick Wins (Low Risk)',
-                            Colors.green,
-                            appState,
-                            onAutoFix: () => _applyAutoFix(tieredAdvice[1]!),
-                            onRevert: () => _revertAutoFix(),
-                          ),
+                    if (isDangerousService)
+                      _buildTierHeader(
+                        'Tier 1: Quick Wins (Low Risk) - AUTO-FIX DISABLED',
+                        Colors.green,
+                        appState,
+                      )
+                    else
+                      _buildTierHeaderWithActions(
+                        'Tier 1: Quick Wins (Low Risk)',
+                        Colors.green,
+                        appState,
+                        onAutoFix: () => _applyAutoFix(tieredAdvice[1]!),
+                        onRevert: _revertAutoFix,
+                      ),
                     SliverList(
                       delegate: SliverChildBuilderDelegate(
                         (context, index) => _buildAdviceCard(
@@ -519,7 +528,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
   Widget _buildTierHeader(String title, Color color, AppState appState) {
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.only(bottom: 8.0, top: 16.0),
+        padding: const EdgeInsets.only(bottom: 8, top: 16),
         child: Text(
           title,
           style: TextStyle(
@@ -541,7 +550,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
   }) {
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.only(bottom: 8.0, top: 16.0),
+        padding: const EdgeInsets.only(bottom: 8, top: 16),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -595,7 +604,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
         side: BorderSide(color: isDark ? Colors.grey[800]! : Colors.grey[300]!),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

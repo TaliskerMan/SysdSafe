@@ -8,7 +8,7 @@
 // SysdSafe is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY. See the GNU AGPL v3 for details.
 
-import 'engine/recommendations.dart';
+import 'package:sysdsafe/engine/recommendations.dart';
 
 /// Pure helpers for the privileged-hardening path. Kept free of Flutter and
 /// I/O so they can be unit-tested directly.

@@ -21,7 +21,7 @@ import 'package:path/path.dart' as p;
 /// `~/.local/state/sysdsafe`.
 Future<Directory> sysdsafeStateDir() async {
   final env = Platform.environment;
-  String base = env['XDG_STATE_HOME'] ?? '';
+  var base = env['XDG_STATE_HOME'] ?? '';
   if (base.isEmpty) {
     final home = env['HOME'] ?? '/tmp';
     base = p.join(home, '.local', 'state');

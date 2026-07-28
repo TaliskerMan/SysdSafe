@@ -15,9 +15,9 @@ import 'package:flutter/foundation.dart';
 ///
 /// Writes formatted messages to a local file in the state directory and standard console.
 class LogService {
-  static final LogService _instance = LogService._internal();
   factory LogService() => _instance;
   LogService._internal();
+  static final LogService _instance = LogService._internal();
 
   File? _logFile;
 
@@ -37,7 +37,7 @@ class LogService {
   void _log(String level, String message) {
     final timestamp = DateTime.now().toUtc().toIso8601String();
     final logLine = '[$timestamp] [$level] $message';
-    
+
     // Print to console for development/debug
     debugPrint(logLine);
 
@@ -65,7 +65,7 @@ class LogService {
   /// Read and return the complete contents of the application log file.
   static Future<String> getLogContents() async {
     if (_instance._logFile != null && await _instance._logFile!.exists()) {
-      return await _instance._logFile!.readAsString();
+      return _instance._logFile!.readAsString();
     }
     return 'No logs found.';
   }

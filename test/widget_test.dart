@@ -16,7 +16,7 @@ import 'package:sysdsafe/state.dart';
 
 /// Main entry point for the SysdSafe widget and integration tests.
 void main() {
-  testWidgets('SysdSafe app smoke test', (WidgetTester tester) async {
+  testWidgets('SysdSafe app smoke test', (tester) async {
     // Build our app and trigger a frame.
     await tester.pumpWidget(
       ChangeNotifierProvider(

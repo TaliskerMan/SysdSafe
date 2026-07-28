@@ -9,23 +9,25 @@
 // but WITHOUT ANY WARRANTY. See the GNU AGPL v3 for details.
 
 import 'dart:io';
-import 'logging.dart';
+import 'package:sysdsafe/logging.dart';
 
 /// Model class representing a Systemd directive parsed from manual pages.
 class ParsedDirective {
-  /// Name of the directive (e.g., ProtectSystem).
-  final String directive;
-  /// Formatted explanation in Markdown.
-  final String explanationMarkdown;
-  /// Code snippet demonstrating how to configure the directive.
-  final String snippet;
-
   /// Constructor for [ParsedDirective].
   ParsedDirective({
     required this.directive,
     required this.explanationMarkdown,
     required this.snippet,
   });
+
+  /// Name of the directive (e.g., ProtectSystem).
+  final String directive;
+
+  /// Formatted explanation in Markdown.
+  final String explanationMarkdown;
+
+  /// Code snippet demonstrating how to configure the directive.
+  final String snippet;
 }
 
 /// Service class that parses systemd directive manuals using `pandoc`.
@@ -41,11 +43,11 @@ class ManParserService {
   Future<List<ParsedDirective>> parseAll({
     void Function(double)? onProgress,
   }) async {
-    List<ParsedDirective> allDirectives = [];
-    int total = targetManPages.length;
-    int current = 0;
+    final allDirectives = <ParsedDirective>[];
+    final total = targetManPages.length;
+    var current = 0;
 
-    for (String page in targetManPages) {
+    for (final page in targetManPages) {
       try {
         // Find man page path
         final pathResult = await Process.run('man', ['-w', page]);
@@ -68,7 +70,7 @@ class ManParserService {
           zcatProcess.stdout.pipe(pandocProcess.stdin);
 
           final pandocOutput = await pandocProcess.stdout
-              .transform(SystemEncoding().decoder)
+              .transform(const SystemEncoding().decoder)
               .join();
           final exitCode = await pandocProcess.exitCode;
 
@@ -101,16 +103,16 @@ class ManParserService {
 
   /// Parse the markdown text content converted from the manual page.
   List<ParsedDirective> _parseMarkdown(String markdown) {
-    List<ParsedDirective> parsed = [];
+    final parsed = <ParsedDirective>[];
     final lines = markdown.split('\n');
 
     String? currentDirective;
-    List<String> currentExplanation = [];
+    var currentExplanation = <String>[];
 
     // Regex to match *DirectiveName=* or similar headers.
     final directiveRegex = RegExp(r'^\*([A-Za-z0-9]+)=\*$');
 
-    for (var line in lines) {
+    for (final line in lines) {
       final match = directiveRegex.firstMatch(line.trim());
       if (match != null) {
         // Save previous if exists
