@@ -54,3 +54,4 @@ app.*.map.json
 *.deb.sha256
 *.deb.sha512
 sysdsafe_*_amd64/
+sonar-project.properties
