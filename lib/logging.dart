@@ -41,9 +41,9 @@ class LogService {
     // Print to console for development/debug
     debugPrint(logLine);
 
-    // Append to file
+    // Append to file (CP-ChangeComments: Fixed double-escaped newline)
     if (_logFile != null) {
-      _logFile!.writeAsStringSync('$logLine\\n', mode: FileMode.append);
+      _logFile!.writeAsStringSync('$logLine\n', mode: FileMode.append);
     }
   }
 

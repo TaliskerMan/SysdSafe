@@ -1,5 +1,5 @@
-// Auto-incremented to version 1.0.6 for build release on 2026-07-20 (Rule_017)
-// Copyright (C) 2026 Chuck Talk <cwtalk1@gmail.com>
+// Auto-incremented to version 1.0.8 for build release on 2026-07-29 (Rule CP-AutoIncrement / Rule CP-ChangeComments)
+// Copyright (C) 2026 Chuck Talk <chuck@nordheim.online>
 // This file is part of SysdSafe.
 //
 // SysdSafe is free software: you can redistribute it and/or modify
@@ -9,6 +9,7 @@
 // SysdSafe is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY. See the GNU AGPL v3 for details.
 
+import 'dart:ffi';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -17,6 +18,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqlite3/open.dart';
 import 'package:sysdsafe/database.dart';
 import 'package:sysdsafe/logging.dart';
 import 'package:sysdsafe/paths.dart';
@@ -31,11 +33,26 @@ import 'package:sysdsafe/ui/reference_screen.dart';
 import 'package:sysdsafe/ui/service_list.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+/// Top-level FFI initialization function for sqlite3 dynamic library resolution.
+/// (CP-ChangeComments: Overrides Linux sqlite3 lookup to load libsqlite3.so.0 cleanly if libsqlite3.so is missing)
+void sysdsafeFfiInit() {
+  if (Platform.isLinux) {
+    open.overrideFor(OperatingSystem.linux, () {
+      try {
+        return DynamicLibrary.open('libsqlite3.so.0');
+      } catch (_) {
+        return DynamicLibrary.open('libsqlite3.so');
+      }
+    });
+  }
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
+    sysdsafeFfiInit();
     sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
+    databaseFactory = createDatabaseFactoryFfi(ffiInit: sysdsafeFfiInit);
   }
 
   await LogService().init();
@@ -102,6 +119,7 @@ class InitializerScreen extends StatefulWidget {
 class _InitializerScreenState extends State<InitializerScreen> {
   bool _isLoading = true;
   bool _isInitialized = false;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -109,13 +127,29 @@ class _InitializerScreenState extends State<InitializerScreen> {
     _checkInit();
   }
 
+  /// Checks if database is initialized, catching errors gracefully.
+  /// (CP-ChangeComments: Wrapped in try/catch to display error screen on failures instead of hanging indefinitely)
   Future<void> _checkInit() async {
-    final isInit = await DatabaseHelper.instance.isDatabaseInitialized();
-    if (mounted) {
-      setState(() {
-        _isInitialized = isInit;
-        _isLoading = false;
-      });
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      final isInit = await DatabaseHelper.instance.isDatabaseInitialized();
+      if (mounted) {
+        setState(() {
+          _isInitialized = isInit;
+          _isLoading = false;
+        });
+      }
+    } catch (error) {
+      LogService.error('Database initialization check failed: $error');
+      if (mounted) {
+        setState(() {
+          _errorMessage = error.toString();
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -123,6 +157,37 @@ class _InitializerScreenState extends State<InitializerScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (_errorMessage != null) {
+      return Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, color: Colors.redAccent, size: 64),
+                const SizedBox(height: 16),
+                const Text(
+                  'Database Initialization Error',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _errorMessage!,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  onPressed: _checkInit,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Retry Initialization'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
     }
     return _isInitialized ? const MainScreen() : const OnboardingScreen();
   }

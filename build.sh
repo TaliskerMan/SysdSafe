@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+export PATH="$PATH:/home/freecode/flutter/bin"
+
 # Versioning: single source of truth from pubspec.yaml
 VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d'+' -f1)
 if [ -z "$VERSION" ]; then

@@ -84,7 +84,7 @@ Version: $VERSION
 Section: utils
 Priority: optional
 Architecture: ${ARCH}
-Depends: polkit | policykit-1, systemd
+Depends: polkit | policykit-1, systemd, libsqlite3-0 | libsqlite3-dev
 Maintainer: Chuck Talk <chuck@nordheim.online>
 Description: SysdSafe - Systemd Service Security Hardening Tool
  A Flutter application designed to audit and harden systemd services 

@@ -86,6 +86,27 @@ class AboutScreen extends StatelessWidget {
                   'Developed under ShadowAgent rules with continuous SBOM generation.',
                 ),
                 const SizedBox(height: 24),
+                // CP-NordheimLogo (116): Nordheim Online logo icon hyperlinked to https://nordheim.online
+                Center(
+                  child: InkWell(
+                    onTap: () => launchUrl(Uri.parse('https://nordheim.online')),
+                    child: Column(
+                      children: [
+                        Image.asset('assets/noln.png', height: 48),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Nordheim Online',
+                          style: TextStyle(
+                            fontSize: appState.fontSizeBase,
+                            color: Colors.blue,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
                 ElevatedButton.icon(
                   onPressed: () {
                     Navigator.push(
@@ -102,6 +123,15 @@ class AboutScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
+                // CP-AboutPage (105): Display copyright by Chuck Talk and license
+                Text(
+                  'Copyright (C) 2026 Chuck Talk <chuck@nordheim.online>',
+                  style: TextStyle(
+                    fontSize: appState.fontSizeBase,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
                 Text(
                   'This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, version 3.',
                   style: TextStyle(fontSize: appState.fontSizeBase),

@@ -45,6 +45,10 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
   List<Vulnerability> vulnerabilities = [];
   bool isLoading = true;
 
+  // CP-ChangeComments: Added pagination state for Tier 1 Quick Wins parameter review
+  int _tier1Page = 0;
+  static const int _pageSize = 2;
+
   @override
   void initState() {
     super.initState();
@@ -179,6 +183,156 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
       }
     }
     await _loadDetails();
+  }
+
+  /// Displays a mandatory safety warning dialog before auto-fixing, ensuring the user
+  /// reviews all proposed parameter changes and acknowledges the single-service change rule.
+  /// (CP-ChangeComments: Enforces single service change safety warning dialog per user requirements)
+  Future<void> _confirmAndApplyAutoFix(
+    List<HardeningAdvice> adviceList,
+    AppState appState,
+  ) async {
+    final serviceName = widget.service.name;
+
+    // Single-service change policy check
+    if (appState.lastModifiedService != null &&
+        appState.lastModifiedService != serviceName) {
+      final proceed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.orangeAccent),
+              SizedBox(width: 8),
+              Expanded(child: Text('Active Service Change Warning')),
+            ],
+          ),
+          content: Text(
+            'You previously modified "${appState.lastModifiedService}".\n\n'
+            'SAFETY RULE: First, do no harm.\n'
+            'We strongly recommend testing and restarting your system to verify "${appState.lastModifiedService}" before hardening another service.\n\n'
+            'Do you still want to proceed with hardening "$serviceName"?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orangeAccent,
+              ),
+              child: const Text('Proceed Anyway'),
+            ),
+          ],
+        ),
+      );
+
+      if (proceed != true) return;
+    }
+
+    if (!mounted) return;
+
+    // Confirmation & Parameter Review Dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              const Icon(Icons.shield_outlined, color: Colors.green),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text('Review Quick Wins: $serviceName'),
+              ),
+            ],
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.amber),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.warning, color: Colors.amber, size: 20),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'SAFETY WARNING: Please make changes to ONLY ONE service at a time. Restart and test system functionality before modifying another service.',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'The following ${adviceList.length} low-risk parameter(s) will be applied to $serviceName:',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: adviceList.length,
+                    itemBuilder: (context, index) {
+                      final advice = adviceList[index];
+                      return Card(
+                        margin: const EdgeInsets.symmetric(vertical: 4),
+                        child: ListTile(
+                          dense: true,
+                          title: Text(
+                            advice.snippet,
+                            style: const TextStyle(
+                              fontFamily: 'monospace',
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
+                          ),
+                          subtitle: Text(advice.humanQuestion),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton.icon(
+              onPressed: () => Navigator.of(context).pop(true),
+              icon: const Icon(Icons.check),
+              label: const Text('Confirm & Apply Auto-Fix'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true) {
+      appState.setLastModifiedService(serviceName);
+      await _applyAutoFix(adviceList);
+    }
   }
 
   /// Runs a privileged operation. Prefers the installed polkit helper
@@ -465,18 +619,39 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                         'Tier 1: Quick Wins (Low Risk)',
                         Colors.green,
                         appState,
-                        onAutoFix: () => _applyAutoFix(tieredAdvice[1]!),
+                        onAutoFix:
+                            () => _confirmAndApplyAutoFix(
+                              tieredAdvice[1]!,
+                              appState,
+                            ),
                         onRevert: _revertAutoFix,
                       ),
+                    SliverToBoxAdapter(
+                      child: _buildPaginationBar(
+                        tieredAdvice[1]!.length,
+                        appState,
+                      ),
+                    ),
                     SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) => _buildAdviceCard(
-                          tieredAdvice[1]![index],
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final totalTier1 = tieredAdvice[1]!.length;
+                        final totalPages = (totalTier1 / _pageSize).ceil();
+                        final safePage = _tier1Page.clamp(
+                          0,
+                          totalPages > 0 ? totalPages - 1 : 0,
+                        );
+                        final pagedAdvice =
+                            tieredAdvice[1]!
+                                .skip(safePage * _pageSize)
+                                .take(_pageSize)
+                                .toList();
+                        if (index >= pagedAdvice.length) return null;
+                        return _buildAdviceCard(
+                          pagedAdvice[index],
                           appState,
                           isDark,
-                        ),
-                        childCount: tieredAdvice[1]!.length,
-                      ),
+                        );
+                      }, childCount: (tieredAdvice[1]!.length - (_tier1Page * _pageSize)).clamp(0, _pageSize)),
                     ),
                   ],
 
@@ -522,6 +697,65 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                 ],
               ),
             ),
+    );
+  }
+
+  /// Builds a pagination control bar for Quick Wins parameter lists.
+  /// (CP-Comments: Docstring added for pagination bar control builder)
+  Widget _buildPaginationBar(int totalItems, AppState appState) {
+    final totalPages = (totalItems / _pageSize).ceil();
+    if (totalPages <= 1) return const SizedBox.shrink();
+
+    final currentPageDisplay = _tier1Page + 1;
+    final startItem = _tier1Page * _pageSize + 1;
+    final endItem = (startItem + _pageSize - 1).clamp(1, totalItems);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Card(
+        color: Theme.of(context).cardColor,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Page $currentPageDisplay of $totalPages (Showing $startItem-$endItem of $totalItems)',
+                style: TextStyle(
+                  fontSize: appState.fontSizeBase,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left),
+                    tooltip: 'Previous Parameters',
+                    onPressed: _tier1Page > 0
+                        ? () {
+                            setState(() {
+                              _tier1Page--;
+                            });
+                          }
+                        : null,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right),
+                    tooltip: 'Next Parameters',
+                    onPressed: _tier1Page < totalPages - 1
+                        ? () {
+                            setState(() {
+                              _tier1Page++;
+                            });
+                          }
+                        : null,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

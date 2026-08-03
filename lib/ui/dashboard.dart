@@ -117,8 +117,45 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           const SizedBox(height: 32),
           Expanded(
+            // CP-ChangeComments: Replaced infinite CircularProgressIndicator with a clear empty state
             child: widget.services.isEmpty
-                ? const Center(child: CircularProgressIndicator())
+                ? Center(
+                    child: Card(
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.info_outline,
+                              size: 48,
+                              color: Colors.blueAccent,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No Systemd Services Scanned',
+                              style: TextStyle(
+                                fontSize: appState.fontSizeBase + 4,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'No active systemd unit security analysis data is available. Ensure systemd is active on your host system.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: appState.fontSizeBase,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
                 : Row(
                     children: [
                       Expanded(

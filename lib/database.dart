@@ -13,6 +13,7 @@ import 'dart:io';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sysdsafe/main.dart';
 import 'package:sysdsafe/man_parser.dart';
 
 /// Representation of a systemd hardening directive and its description/snippet.
@@ -51,10 +52,12 @@ class DatabaseHelper {
 
   /// Initialize the SQLite database connection at the specified file path.
   Future<Database> _initDB(String filePath) async {
+    sysdsafeFfiInit();
+
     if (Platform.environment.containsKey('FLUTTER_TEST')) {
       sqfliteFfiInit();
-      databaseFactory = databaseFactoryFfi;
-      return databaseFactoryFfi.openDatabase(
+      databaseFactory = createDatabaseFactoryFfi(ffiInit: sysdsafeFfiInit);
+      return databaseFactory.openDatabase(
         inMemoryDatabasePath,
         options: OpenDatabaseOptions(version: 1, onCreate: _createDB),
       );
@@ -62,7 +65,8 @@ class DatabaseHelper {
     final dbPath = await getApplicationSupportDirectory();
     final path = join(dbPath.path, filePath);
 
-    return databaseFactoryFfi.openDatabase(
+    databaseFactory = createDatabaseFactoryFfi(ffiInit: sysdsafeFfiInit);
+    return databaseFactory.openDatabase(
       path,
       options: OpenDatabaseOptions(version: 1, onCreate: _createDB),
     );

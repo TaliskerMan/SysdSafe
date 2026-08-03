@@ -66,13 +66,26 @@ class SystemdScanner {
   /// Scan all Systemd services and output detailed security status lists.
   ///
   /// Also exports the raw results to Audit/hardening_audit.json for offline viewing.
+  /// (CP-ChangeComments: Added 10s execution timeout and robust error logging to prevent startup hangs)
   Future<List<SystemdService>> scanServices() async {
     var services = <SystemdService>[];
     try {
       final result = await Process.run('systemd-analyze', [
         'security',
         '--json=pretty',
-      ]);
+      ]).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          LogService.error('systemd-analyze execution timed out after 10s');
+          return ProcessResult(
+            -1,
+            -1,
+            '',
+            'systemd-analyze security timed out',
+          );
+        },
+      );
+
       if (result.exitCode == 0) {
         final stdout = result.stdout as String;
 
@@ -82,6 +95,10 @@ class SystemdScanner {
         await auditFile.writeAsString(stdout);
 
         services = parseSecurityList(stdout);
+      } else {
+        LogService.error(
+          'systemd-analyze failed with exit code ${result.exitCode}: ${result.stderr}',
+        );
       }
     } catch (error) {
       LogService.error('Error scanning services: $error');

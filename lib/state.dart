@@ -14,9 +14,21 @@ import 'package:flutter/material.dart';
 class AppState extends ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.system;
   double _fontSizeBase = 14;
+  String? _lastModifiedService;
 
   ThemeMode get themeMode => _themeMode;
   double get fontSizeBase => _fontSizeBase;
+
+  /// The name of the systemd service unit that was most recently modified.
+  /// (CP-Comments: Added for single-service change safety enforcement)
+  String? get lastModifiedService => _lastModifiedService;
+
+  /// Sets or clears the active modified service name.
+  /// (CP-ChangeComments: Enables enforcement of modifying only one service at a time)
+  void setLastModifiedService(String? serviceName) {
+    _lastModifiedService = serviceName;
+    notifyListeners();
+  }
 
   /// Update the active theme mode.
   void setThemeMode(ThemeMode mode) {
