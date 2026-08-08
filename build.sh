@@ -26,9 +26,32 @@ ARCH=$(dpkg --print-architecture)
 flutter clean
 flutter build linux --release
 
-echo "Generating SBOM into Audit folder..."
+echo "Generating SBOM into Audit folder via Syft..."
 mkdir -p Audit
 flutter pub deps > Audit/sbom.txt
+
+SYFT_BIN="syft"
+if ! command -v syft &> /dev/null; then
+    if [ -f "${HOME}/.local/bin/syft" ]; then
+        SYFT_BIN="${HOME}/.local/bin/syft"
+    fi
+fi
+if command -v "${SYFT_BIN}" &> /dev/null; then
+    "${SYFT_BIN}" dir:. \
+        --exclude ./venv \
+        --exclude ./android \
+        --exclude ./ios \
+        --exclude ./macos \
+        --exclude ./windows \
+        --exclude ./build \
+        --exclude ./packaging_output \
+        --exclude ./dist \
+        --exclude ./plan \
+        --exclude ./.dart_tool \
+        -o cyclonedx-json > Audit/SBOM-Linux.json
+    cp Audit/SBOM-Linux.json Audit/SBOM-Linux
+    cp Audit/SBOM-Linux.json Audit/sbom.json
+fi
 
 echo "Running packaging script..."
 ./scripts/package_deb.sh
@@ -59,6 +82,8 @@ cp "${DEB_FILE}.sha512" "${NOBUILDS_DIR}/" || true
 cp pubkey.asc "${NOBUILDS_DIR}/" || true
 cp LICENSE "${NOBUILDS_DIR}/"
 cp README.md "${NOBUILDS_DIR}/"
+cp Audit/SBOM-Linux.json "${NOBUILDS_DIR}/" || true
+cp Audit/SBOM-Linux "${NOBUILDS_DIR}/" || true
 cp Audit/sbom.json "${NOBUILDS_DIR}/" || true
 
 # Generate source code archive
