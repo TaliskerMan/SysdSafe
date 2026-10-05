@@ -27,6 +27,7 @@ class AboutScreen extends StatelessWidget {
     final appState = Provider.of<AppState>(context);
 
     return PageContainer(
+      scrollable: true,
       title: 'About SysdSafe',
       children: [
         Card(

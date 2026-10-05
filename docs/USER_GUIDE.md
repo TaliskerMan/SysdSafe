@@ -101,9 +101,24 @@ SysdSafe tracks operations (audits, fixes, reverts) to a local app log file.
 *   **In-App Auditor:** View trace entries in real-time in the **Logs** tab.
 *   **Support Portal:** If a service fails to restore, navigate to the **Logs** tab and tap **Email Support**. Your default mail system will load with pre-filled support destination fields. Manually attach `~/sysdsafe_backups/` and `app.log` so our team can debug the environment.
 
+## 🎨 7. Desktop Theme Awareness & Accessibility Controls
+
+SysdSafe is designed with comprehensive desktop integration and motor accessibility accommodations:
+
+### Desktop Theme Synchronization
+*   **System Default (Auto):** Follows your Linux host desktop environment (GNOME, KDE, XFCE) appearance preference in real time via the Freedesktop Portal (`org.freedesktop.appearance.color-scheme`).
+*   **Manual Theme Selection:** Use the theme icon in the top AppBar to choose between **System Default** (`brightness_auto`), **Light Theme** (`light_mode`), or **Dark Theme** (`dark_mode`).
+*   **Persistent Preferences:** Your selected theme mode and base font size are stored in local SQLite storage and automatically restored across app restarts.
+
+### Accessible Scrolling & Motor Assistance
+*   **Mouse & Trackpad Drag Scrolling:** Users with motor impairments or difficulty with fine mouse-wheel coordination can click and drag anywhere in lists and pages to scroll naturally.
+*   **High-Visibility Scrollbars:** Persistent 14px-wide scrollbar tracks and thumbs remain visible at all times, providing clear visual orientation and easy click/touch targets.
+*   **Jump Navigation:** Quick "Scroll to Top" (`arrow_upward`) and "Scroll to Bottom" (`arrow_downward`) buttons are available on all long views (Service List, Reference, Service Detail, and Application Logs) for effortless one-click navigation.
+*   **Adaptive Font Scaling:** Font scaling (+/- in the AppBar) scales smoothly up to 19pt without clipping or layout overflow.
+
 ---
 
-## 🏗️ 7. Release & Debian Packaging Pipeline
+## 🏗️ 8. Release & Debian Packaging Pipeline
 
 SysdSafe compiles, checksums, and signs release files automatically via internal packaging scripts:
 

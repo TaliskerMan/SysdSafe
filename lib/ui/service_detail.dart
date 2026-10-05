@@ -41,6 +41,7 @@ class ServiceDetailScreen extends StatefulWidget {
 }
 
 class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
+  final ScrollController _scrollController = ScrollController();
   final scanner = SystemdScanner();
   List<Vulnerability> vulnerabilities = [];
   bool isLoading = true;
@@ -48,6 +49,32 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
   // CP-ChangeComments: Added pagination state for Tier 1 Quick Wins parameter review
   int _tier1Page = 0;
   static const int _pageSize = 2;
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToTop() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
 
   @override
   void initState() {
@@ -488,13 +515,32 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
         widget.service.name.contains('greeter');
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.service.name)),
+      appBar: AppBar(
+        title: Text(widget.service.name),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.arrow_upward),
+            tooltip: 'Scroll to Top',
+            onPressed: _scrollToTop,
+          ),
+          IconButton(
+            icon: const Icon(Icons.arrow_downward),
+            tooltip: 'Scroll to Bottom',
+            onPressed: _scrollToBottom,
+          ),
+        ],
+      ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
               padding: const EdgeInsets.all(16),
-              child: CustomScrollView(
-                slivers: [
+              child: Scrollbar(
+                controller: _scrollController,
+                thumbVisibility: true,
+                trackVisibility: true,
+                child: CustomScrollView(
+                  controller: _scrollController,
+                  slivers: [
                   SliverToBoxAdapter(
                     // ShadowAgent Rule: "First, do no harm".
                     // Provide a persistent warning so users don't break their entire system at once.
@@ -697,6 +743,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                 ],
               ),
             ),
+          ),
     );
   }
 

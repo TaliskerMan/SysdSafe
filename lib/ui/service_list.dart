@@ -27,8 +27,35 @@ class ServiceListScreen extends StatefulWidget {
 }
 
 class _ServiceListScreenState extends State<ServiceListScreen> {
+  final ScrollController _scrollController = ScrollController();
   String searchQuery = '';
   String filterLevel = 'ALL';
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToTop() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
 
   /// Converts the string risk level into a numeric score for sorting purposes.
   int _urgencyValue(String level) {
@@ -109,55 +136,72 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
                   });
                 },
               ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.arrow_upward),
+                tooltip: 'Scroll to Top',
+                onPressed: _scrollToTop,
+              ),
+              IconButton(
+                icon: const Icon(Icons.arrow_downward),
+                tooltip: 'Scroll to Bottom',
+                onPressed: _scrollToBottom,
+              ),
             ],
           ),
           const SizedBox(height: 16),
           Expanded(
-            child: ListView.builder(
-              itemCount: filtered.length,
-              itemBuilder: (context, index) {
-                final service = filtered[index];
-                return Card(
-                  margin: const EdgeInsets.symmetric(vertical: 6),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: ListTile(
-                    leading: Icon(
-                      Icons.security,
-                      color: _getColor(service.exposureLevel),
-                      size: 32,
+            child: Scrollbar(
+              controller: _scrollController,
+              thumbVisibility: true,
+              trackVisibility: true,
+              child: ListView.builder(
+                controller: _scrollController,
+                itemCount: filtered.length,
+                itemBuilder: (context, index) {
+                  final service = filtered[index];
+                  return Card(
+                    margin: const EdgeInsets.symmetric(vertical: 6),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    title: Text(
-                      service.name,
-                      style: TextStyle(
-                        fontSize: appState.fontSizeBase + 2,
-                        fontWeight: FontWeight.bold,
+                    child: ListTile(
+                      leading: Icon(
+                        Icons.security,
+                        color: _getColor(service.exposureLevel),
+                        size: 32,
                       ),
-                    ),
-                    subtitle: Text('Exposure: ${service.exposureScore}'),
-                    trailing: Chip(
-                      label: Text(
-                        service.exposureLevel,
+                      title: Text(
+                        service.name,
                         style: TextStyle(
-                          color: Colors.white,
-                          fontSize: appState.fontSizeBase - 2,
+                          fontSize: appState.fontSizeBase + 2,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      backgroundColor: _getColor(service.exposureLevel),
-                    ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              ServiceDetailScreen(service: service),
+                      subtitle: Text('Exposure: ${service.exposureScore}'),
+                      trailing: Chip(
+                        label: Text(
+                          service.exposureLevel,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: appState.fontSizeBase - 2,
+                          ),
                         ),
-                      );
-                    },
-                  ),
-                );
-              },
+                        backgroundColor: _getColor(service.exposureLevel),
+                      ),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                ServiceDetailScreen(service: service),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
             ),
           ),
         ],

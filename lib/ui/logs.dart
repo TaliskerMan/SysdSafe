@@ -27,12 +27,39 @@ class LogsScreen extends StatefulWidget {
 }
 
 class _LogsScreenState extends State<LogsScreen> {
+  final ScrollController _scrollController = ScrollController();
   String _logs = 'Loading logs...';
 
   @override
   void initState() {
     super.initState();
     _loadLogs();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToTop() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.minScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   /// Asynchronously loads the application logs from the storage and updates the state.
@@ -112,6 +139,16 @@ class _LogsScreenState extends State<LogsScreen> {
                     tooltip: 'Copy to Clipboard',
                     onPressed: _copyToClipboard,
                   ),
+                  IconButton(
+                    icon: const Icon(Icons.arrow_upward),
+                    tooltip: 'Scroll to Top',
+                    onPressed: _scrollToTop,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.arrow_downward),
+                    tooltip: 'Scroll to Bottom',
+                    onPressed: _scrollToBottom,
+                  ),
                   ElevatedButton.icon(
                     onPressed: _emailSupport,
                     icon: const Icon(Icons.email),
@@ -140,14 +177,20 @@ class _LogsScreenState extends State<LogsScreen> {
                   color: isDark ? Colors.grey[800]! : Colors.grey[400]!,
                 ),
               ),
-              child: SingleChildScrollView(
-                reverse: true, // Auto-scroll to the bottom
-                child: Text(
-                  _logs,
-                  style: TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: appState.fontSizeBase - 2,
-                    color: isDark ? Colors.greenAccent : Colors.black87,
+              child: Scrollbar(
+                controller: _scrollController,
+                thumbVisibility: true,
+                trackVisibility: true,
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  reverse: true, // Auto-scroll to the bottom
+                  child: Text(
+                    _logs,
+                    style: TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: appState.fontSizeBase - 2,
+                      color: isDark ? Colors.greenAccent : Colors.black87,
+                    ),
                   ),
                 ),
               ),

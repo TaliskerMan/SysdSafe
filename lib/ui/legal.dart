@@ -16,11 +16,18 @@ class LegalScreen extends StatefulWidget {
 
 class _LegalScreenState extends State<LegalScreen> {
   String licenseText = 'Loading license...';
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _loadLicense();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadLicense() async {
@@ -118,12 +125,18 @@ class _LegalScreenState extends State<LegalScreen> {
             color: isDark ? Colors.black26 : Colors.grey[100],
             child: Padding(
               padding: const EdgeInsets.all(16),
-              child: SingleChildScrollView(
-                child: Text(
-                  licenseText,
-                  style: TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: appState.fontSizeBase,
+              child: Scrollbar(
+                controller: _scrollController,
+                thumbVisibility: true,
+                trackVisibility: true,
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  child: Text(
+                    licenseText,
+                    style: TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: appState.fontSizeBase,
+                    ),
                   ),
                 ),
               ),

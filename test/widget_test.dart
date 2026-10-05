@@ -8,6 +8,8 @@
 // SysdSafe is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY. See the GNU AGPL v3 for details.
 
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -27,5 +29,32 @@ void main() {
 
     // Verify that the initial screen shows a loading indicator
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
+  });
+
+  test('AccessibleDesktopScrollBehavior enables mouse drag and trackpad', () {
+    const behavior = AccessibleDesktopScrollBehavior();
+    expect(behavior.dragDevices, contains(PointerDeviceKind.mouse));
+    expect(behavior.dragDevices, contains(PointerDeviceKind.touch));
+    expect(behavior.dragDevices, contains(PointerDeviceKind.trackpad));
+  });
+
+  test('AppState correctly exposes and cycles theme modes and icons', () {
+    final state = AppState();
+    expect(state.themeMode, ThemeMode.system);
+    expect(state.themeModeName, 'System Default');
+    expect(state.themeModeIcon, Icons.brightness_auto);
+
+    state.toggleTheme();
+    expect(state.themeMode, ThemeMode.light);
+    expect(state.themeModeName, 'Light Theme');
+    expect(state.themeModeIcon, Icons.light_mode);
+
+    state.toggleTheme();
+    expect(state.themeMode, ThemeMode.dark);
+    expect(state.themeModeName, 'Dark Theme');
+    expect(state.themeModeIcon, Icons.dark_mode);
+
+    state.toggleTheme();
+    expect(state.themeMode, ThemeMode.system);
   });
 }

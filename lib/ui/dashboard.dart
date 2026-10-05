@@ -27,6 +27,8 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  final ScrollController _scrollController = ScrollController();
+
   int get unsafeCount =>
       widget.services.where((s) => s.exposureLevel == 'UNSAFE').length;
   int get exposedCount =>
@@ -37,14 +39,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
       widget.services.where((s) => s.exposureLevel == 'OK').length;
 
   @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
 
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    return Scrollbar(
+      controller: _scrollController,
+      thumbVisibility: true,
+      trackVisibility: true,
+      child: SingleChildScrollView(
+        controller: _scrollController,
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           Text(
             'System Security Overview',
             style: TextStyle(
@@ -116,7 +129,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
           const SizedBox(height: 32),
-          Expanded(
+          SizedBox(
+            height: 340,
             // CP-ChangeComments: Replaced infinite CircularProgressIndicator with a clear empty state
             child: widget.services.isEmpty
                 ? Center(
@@ -246,8 +260,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ],
                   ),
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }

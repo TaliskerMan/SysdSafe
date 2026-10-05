@@ -1,4 +1,4 @@
-// Auto-incremented to version 1.0.8 for build release on 2026-07-29 (Rule CP-AutoIncrement / Rule CP-ChangeComments)
+// Auto-incremented to version 1.0.9 for build release on 2026-10-05 (Rule CP-AutoIncrement / Rule CP-ChangeComments)
 // Copyright (C) 2026 Chuck Talk <chuck@nordheim.online>
 // This file is part of SysdSafe.
 //
@@ -11,6 +11,7 @@
 
 import 'dart:ffi';
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -66,6 +67,20 @@ void main() async {
   );
 }
 
+/// Custom scroll behavior for desktop accessibility that enables mouse/trackpad drag
+/// scrolling across all scrollable views.
+class AccessibleDesktopScrollBehavior extends MaterialScrollBehavior {
+  const AccessibleDesktopScrollBehavior();
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.trackpad,
+        PointerDeviceKind.stylus,
+      };
+}
+
 /// Root Widget of the SysdSafe application.
 ///
 /// Builds a [MaterialApp] with support for system theme switching and initializes
@@ -79,24 +94,61 @@ class SysdSafeApp extends StatelessWidget {
       builder: (context, appState, child) {
         return MaterialApp(
           title: 'SysdSafe',
+          scrollBehavior: const AccessibleDesktopScrollBehavior(),
           themeMode: appState.themeMode,
           theme: ThemeData(
+            useMaterial3: true,
             brightness: Brightness.light,
-            primarySwatch: Colors.blue,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.blue,
+              brightness: Brightness.light,
+            ),
             textTheme: GoogleFonts.notoSansTextTheme(
               ThemeData.light().textTheme,
             ).apply(bodyColor: Colors.black, displayColor: Colors.black),
             scaffoldBackgroundColor: Colors.white,
+            scrollbarTheme: ScrollbarThemeData(
+              thumbVisibility: const WidgetStatePropertyAll(true),
+              trackVisibility: const WidgetStatePropertyAll(true),
+              thickness: const WidgetStatePropertyAll(14.0),
+              radius: const Radius.circular(8.0),
+              thumbColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.dragged)) return Colors.blue[700];
+                if (states.contains(WidgetState.hovered)) return Colors.blue;
+                return Colors.black45;
+              }),
+              trackColor: const WidgetStatePropertyAll(Colors.black12),
+            ),
           ),
           darkTheme: ThemeData(
+            useMaterial3: true,
             brightness: Brightness.dark,
-            primarySwatch: Colors.green,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.blue,
+              brightness: Brightness.dark,
+            ),
             textTheme: GoogleFonts.notoSansTextTheme(
               ThemeData.dark().textTheme,
             ).apply(bodyColor: Colors.white, displayColor: Colors.white),
             // Dark navy background
             scaffoldBackgroundColor: const Color(0xFF001F3F),
             cardColor: const Color(0xFF003366),
+            scrollbarTheme: ScrollbarThemeData(
+              thumbVisibility: const WidgetStatePropertyAll(true),
+              trackVisibility: const WidgetStatePropertyAll(true),
+              thickness: const WidgetStatePropertyAll(14.0),
+              radius: const Radius.circular(8.0),
+              thumbColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.dragged)) {
+                  return Colors.lightBlueAccent;
+                }
+                if (states.contains(WidgetState.hovered)) {
+                  return Colors.blueAccent;
+                }
+                return Colors.white54;
+              }),
+              trackColor: const WidgetStatePropertyAll(Colors.white12),
+            ),
           ),
           home: const InitializerScreen(),
         );
@@ -308,14 +360,43 @@ class _MainScreenState extends State<MainScreen> {
             tooltip: 'Increase Font',
             onPressed: appState.increaseFontSize,
           ),
-          IconButton(
-            icon: Icon(
-              appState.themeMode == ThemeMode.dark
-                  ? Icons.light_mode
-                  : Icons.dark_mode,
-            ),
-            tooltip: 'Toggle Theme',
-            onPressed: appState.toggleTheme,
+          PopupMenuButton<ThemeMode>(
+            icon: Icon(appState.themeModeIcon),
+            tooltip: 'Theme: ${appState.themeModeName} (Click to switch)',
+            initialValue: appState.themeMode,
+            onSelected: (mode) => appState.setThemeMode(mode),
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: ThemeMode.system,
+                child: Row(
+                  children: [
+                    Icon(Icons.brightness_auto),
+                    SizedBox(width: 8),
+                    Text('System Default'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: ThemeMode.light,
+                child: Row(
+                  children: [
+                    Icon(Icons.light_mode),
+                    SizedBox(width: 8),
+                    Text('Light Theme'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: ThemeMode.dark,
+                child: Row(
+                  children: [
+                    Icon(Icons.dark_mode),
+                    SizedBox(width: 8),
+                    Text('Dark Theme'),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),

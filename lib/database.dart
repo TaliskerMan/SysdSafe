@@ -59,7 +59,11 @@ class DatabaseHelper {
       databaseFactory = createDatabaseFactoryFfi(ffiInit: sysdsafeFfiInit);
       return databaseFactory.openDatabase(
         inMemoryDatabasePath,
-        options: OpenDatabaseOptions(version: 1, onCreate: _createDB),
+        options: OpenDatabaseOptions(
+          version: 1,
+          onCreate: _createDB,
+          onOpen: _onOpenDB,
+        ),
       );
     }
     final dbPath = await getApplicationSupportDirectory();
@@ -68,8 +72,44 @@ class DatabaseHelper {
     databaseFactory = createDatabaseFactoryFfi(ffiInit: sysdsafeFfiInit);
     return databaseFactory.openDatabase(
       path,
-      options: OpenDatabaseOptions(version: 1, onCreate: _createDB),
+      options: OpenDatabaseOptions(
+        version: 1,
+        onCreate: _createDB,
+        onOpen: _onOpenDB,
+      ),
     );
+  }
+
+  /// Ensures all required tables exist even on existing database files from earlier versions.
+  /// (CP-ChangeComments: Prevents "no such table: backups" on databases created prior to backup feature)
+  Future _onOpenDB(Database db) async {
+    const idType = 'INTEGER PRIMARY KEY AUTOINCREMENT';
+    const textType = 'TEXT NOT NULL';
+
+    await db.execute('''
+CREATE TABLE IF NOT EXISTS directives (
+  _id $idType,
+  directive $textType,
+  explanation $textType,
+  snippet $textType
+)
+''');
+
+    await db.execute('''
+CREATE TABLE IF NOT EXISTS backups (
+  _id $idType,
+  service_name $textType,
+  original_content $textType,
+  timestamp $textType
+)
+''');
+
+    await db.execute('''
+CREATE TABLE IF NOT EXISTS app_settings (
+  key $textType PRIMARY KEY,
+  value $textType
+)
+''');
   }
 
   /// Create database tables schema during database creation.
@@ -95,6 +135,14 @@ CREATE TABLE backups (
   service_name $textType,
   original_content $textType,
   timestamp $textType
+)
+''');
+
+    // Table for storing persistent user preferences (e.g. desktop theme mode, font size)
+    await db.execute('''
+CREATE TABLE IF NOT EXISTS app_settings (
+  key $textType PRIMARY KEY,
+  value $textType
 )
 ''');
   }
@@ -216,6 +264,42 @@ CREATE TABLE backups (
 
     if (maps.isNotEmpty) {
       return maps.first['original_content']! as String;
+    }
+    return null;
+  }
+
+  /// Saves a key-value setting into the persistent `app_settings` table.
+  Future<void> saveSetting(String key, String value) async {
+    final db = await instance.database;
+    await db.execute('''
+CREATE TABLE IF NOT EXISTS app_settings (
+  key TEXT PRIMARY KEY,
+  value TEXT
+)
+''');
+    await db.insert(
+      'app_settings',
+      {'key': key, 'value': value},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// Retrieves a key-value setting from the `app_settings` table, or null if unset.
+  Future<String?> getSetting(String key) async {
+    final db = await instance.database;
+    await db.execute('''
+CREATE TABLE IF NOT EXISTS app_settings (
+  key TEXT PRIMARY KEY,
+  value TEXT
+)
+''');
+    final maps = await db.query(
+      'app_settings',
+      where: 'key = ?',
+      whereArgs: [key],
+    );
+    if (maps.isNotEmpty) {
+      return maps.first['value'] as String?;
     }
     return null;
   }

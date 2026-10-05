@@ -4,6 +4,22 @@ All notable changes to the SysdSafe project are documented in this file. This pr
 
 ---
 
+## [1.0.9] - 2026-10-05
+
+### Added
+- **Desktop Theme Awareness:** Integrated Material 3 with `ColorScheme.fromSeed`, real-time Freedesktop Portal DBus theme tracking, and an AppBar 3-way theme selector (`System Default`, `Light Theme`, `Dark Theme`).
+- **Persistent Preferences:** Added automatic SQLite storage for theme mode and font size selections so user settings survive restarts.
+- **Accessible Drag Scrolling:** Enabled pointer/mouse, trackpad, and stylus drag scrolling globally across all views via `AccessibleDesktopScrollBehavior` for users with motor difficulties.
+- **High-Visibility Scrollbars:** Configured 14px thick, always-visible scrollbars with high contrast across light and dark themes.
+- **Jump-to-Top / Jump-to-Bottom Navigation:** Added dedicated scroll jump buttons to Service List, Security Reference, Service Detail, and Application Logs screens.
+
+### Fixed
+- **Layout Overflows on Font Scaling:** Replaced rigid static containers in `DashboardScreen` and `PageContainer` (`AboutScreen`) with scrollable views, preventing content clipping when font size is increased up to 19pt.
+- **Database Resilience:** Added automatic table migrations on database open for `directives`, `backups`, and `app_settings` to prevent missing table exceptions on pre-existing installations.
+- **Scrollbar Scheduler Assertions:** Resolved missing ScrollPosition assertions by removing unattached scrollbar wrappers and properly binding controllers.
+
+---
+
 ## [1.0.5] - 2026-06-22
 
 ### Fixed

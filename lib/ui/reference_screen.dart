@@ -26,9 +26,36 @@ class ReferenceScreen extends StatefulWidget {
 }
 
 class _ReferenceScreenState extends State<ReferenceScreen> {
+  final ScrollController _scrollController = ScrollController();
   List<DirectiveExplanation> _allDirectives = [];
   List<DirectiveExplanation> _filteredDirectives = [];
   bool _isLoading = true;
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToTop() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
 
   @override
   void initState() {
@@ -95,21 +122,43 @@ class _ReferenceScreenState extends State<ReferenceScreen> {
             style: TextStyle(fontSize: appState.fontSizeBase),
           ),
           const SizedBox(height: 16),
-          TextField(
-            decoration: InputDecoration(
-              labelText: 'Search Directives',
-              prefixIcon: const Icon(Icons.search),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  decoration: InputDecoration(
+                    labelText: 'Search Directives',
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onChanged: _filter,
+                ),
               ),
-            ),
-            onChanged: _filter,
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.arrow_upward),
+                tooltip: 'Scroll to Top',
+                onPressed: _scrollToTop,
+              ),
+              IconButton(
+                icon: const Icon(Icons.arrow_downward),
+                tooltip: 'Scroll to Bottom',
+                onPressed: _scrollToBottom,
+              ),
+            ],
           ),
           const SizedBox(height: 16),
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : ListView.builder(
+                : Scrollbar(
+                    controller: _scrollController,
+                    thumbVisibility: true,
+                    trackVisibility: true,
+                    child: ListView.builder(
+                      controller: _scrollController,
                     itemCount: _filteredDirectives.length,
                     itemBuilder: (context, index) {
                       final item = _filteredDirectives[index];
@@ -160,6 +209,7 @@ class _ReferenceScreenState extends State<ReferenceScreen> {
                         ),
                       );
                     },
+                  ),
                   ),
           ),
         ],
