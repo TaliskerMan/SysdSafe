@@ -1,4 +1,4 @@
-// Auto-incremented to version 1.0.9 for build release on 2026-10-05 (Rule CP-AutoIncrement / Rule CP-ChangeComments)
+// Auto-incremented to version 1.0.10 for build release on 2026-10-05 (Rule CP-AutoIncrement / Rule CP-ChangeComments)
 // Copyright (C) 2026 Chuck Talk <chuck@nordheim.online>
 // This file is part of SysdSafe.
 //
@@ -48,8 +48,31 @@ void sysdsafeFfiInit() {
   }
 }
 
-void main() async {
+void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // (CP-ChangeComments: Enforce privileged execution on Linux to prevent unprivileged launch)
+  if (Platform.isLinux &&
+      !Platform.environment.containsKey('FLUTTER_TEST') &&
+      !Platform.environment.containsKey('SYSDSAFE_ALLOW_UNPRIVILEGED')) {
+    try {
+      final uidCheck = Process.runSync('id', ['-u']);
+      final isRoot = uidCheck.stdout.toString().trim() == '0';
+      if (!isRoot) {
+        // Unprivileged launch is not permitted. Re-execute via wrapper or pkexec.
+        if (File('/usr/bin/sysdsafe').existsSync()) {
+          Process.start('/usr/bin/sysdsafe', args, mode: ProcessStartMode.detached);
+        } else {
+          Process.start('pkexec', ['/opt/sysdsafe/sysdsafe', ...args],
+              mode: ProcessStartMode.detached);
+        }
+        exit(0);
+      }
+    } catch (e) {
+      stderr.writeln('Warning: Failed to verify EUID: $e');
+    }
+  }
+
   if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
     sysdsafeFfiInit();
     sqfliteFfiInit();

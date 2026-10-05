@@ -4,6 +4,16 @@ All notable changes to the SysdSafe project are documented in this file. This pr
 
 ---
 
+## [1.0.10] - 2026-10-05
+
+### Added
+- **Privileged Launch Enforcement:** Guaranteed SysdSafe only runs with elevated administrative (root) privileges. If launched unprivileged, it automatically re-executes via `pkexec` / `/usr/bin/sysdsafe`.
+- **PolicyKit GUI Action (`online.nordheim.sysdsafe.gui`):** Registered dedicated Polkit action in `online.nordheim.sysdsafe.policy` with `org.freedesktop.policykit.exec.allow_gui = true` for `/opt/sysdsafe/sysdsafe`.
+- **X11 / Wayland Display Access Handling:** Added automatic `xhost +SI:localuser:root` forwarding in the `/usr/bin/sysdsafe` launcher wrapper to ensure the root-elevated Flutter GUI can seamlessly connect to user display servers without GTK display errors.
+- **Root Helper Direct Execution:** Updated `_runPrivileged` in `ServiceDetailScreen` to execute hardening commands directly when already running as root, eliminating redundant elevation prompts.
+
+---
+
 ## [1.0.9] - 2026-10-05
 
 ### Added

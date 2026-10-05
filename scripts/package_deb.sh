@@ -53,13 +53,46 @@ cp -r "$BUILD_DIR"/* "$DEB_DIR/opt/$APP_NAME/"
 install -m 0755 linux/packaging/sysdsafe-helper "$DEB_DIR/usr/lib/$APP_NAME/sysdsafe-helper"
 install -m 0644 linux/packaging/online.nordheim.sysdsafe.policy "$DEB_DIR/usr/share/polkit-1/actions/online.nordheim.sysdsafe.policy"
 
-# Create executable wrapper
-cat <<EOF > "$DEB_DIR/usr/bin/$APP_NAME"
+# Create executable wrapper enforcing root privileges via PolicyKit (pkexec)
+cat <<'EOF' > "$DEB_DIR/usr/bin/$APP_NAME"
 #!/bin/bash
-cd /opt/$APP_NAME
-exec ./$APP_NAME "\$@"
+# SysdSafe privileged launcher wrapper
+# Enforces running with administrative privileges via Polkit (pkexec)
+
+# If already running as root, proceed directly to binary execution
+if [ "$(id -u)" -eq 0 ]; then
+    cd /opt/sysdsafe
+    exec ./sysdsafe "$@"
+fi
+
+# Ensure X11/XWayland display authorization for local root user if graphical environment exists
+GRANTED_XHOST=0
+if command -v xhost >/dev/null 2>&1; then
+    if ! xhost 2>/dev/null | grep -qi 'SI:localuser:root$'; then
+        xhost +SI:localuser:root >/dev/null 2>&1
+        GRANTED_XHOST=1
+    fi
+fi
+
+# Forward display environment
+export DISPLAY="${DISPLAY:-:0}"
+if [ -n "$XAUTHORITY" ]; then
+    export XAUTHORITY="$XAUTHORITY"
+fi
+
+# Execute SysdSafe via pkexec to enforce root privileges
+pkexec /opt/sysdsafe/sysdsafe "$@"
+STATUS=$?
+
+# Revoke display authorization if granted by this wrapper invocation
+if [ "$GRANTED_XHOST" -eq 1 ] && command -v xhost >/dev/null 2>&1; then
+    xhost -SI:localuser:root >/dev/null 2>&1 || true
+fi
+
+exit $STATUS
 EOF
 chmod +x "$DEB_DIR/usr/bin/$APP_NAME"
+
 
 # Copy Icon
 cp assets/sysdsafe.png "$DEB_DIR/usr/share/icons/hicolor/256x256/apps/com.example.sysdsafe.png"

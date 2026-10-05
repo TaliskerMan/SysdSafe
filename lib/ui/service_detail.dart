@@ -362,19 +362,33 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
     }
   }
 
-  /// Runs a privileged operation. Prefers the installed polkit helper
-  /// (`pkexec <helper> ...`), falling back to an inline `pkexec sh -c` script
-  /// when the helper is not installed (development).
+  /// Runs a privileged operation. When running as root, executes directly;
+  /// otherwise invokes PolicyKit via `pkexec`. Prefers the installed polkit
+  /// helper (`kSysdSafeHelper`), falling back to an inline script.
   Future<ProcessResult> _runPrivileged({
     required List<String> helperArgs,
     required String fallbackScript,
     required List<String> fallbackArgs,
   }) async {
+    final isRoot = Platform.isLinux &&
+        Process.runSync('id', ['-u']).stdout.toString().trim() == '0';
+
     if (File(kSysdSafeHelper).existsSync()) {
+      if (isRoot) {
+        return Process.run(kSysdSafeHelper, helperArgs);
+      }
       return Process.run('pkexec', [kSysdSafeHelper, ...helperArgs]);
     }
     // ShadowAgent Rule: never interpolate user-controlled values into the
     // script; pass them as positional arguments after `--`.
+    if (isRoot) {
+      return Process.run('sh', [
+        '-c',
+        fallbackScript,
+        '--',
+        ...fallbackArgs,
+      ]);
+    }
     return Process.run('pkexec', [
       'sh',
       '-c',
