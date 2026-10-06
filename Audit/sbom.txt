@@ -1,6 +1,6 @@
 Dart SDK 3.12.1
 Flutter SDK 3.44.1
-sysdsafe 1.0.10
+sysdsafe 1.0.11
 ├── cupertino_icons 1.0.9
 ├── fl_chart 1.2.0
 │   ├── equatable 2.1.0

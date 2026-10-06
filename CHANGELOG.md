@@ -4,6 +4,16 @@ All notable changes to the SysdSafe project are documented in this file. This pr
 
 ---
 
+## [1.0.11] - 2026-10-06
+
+### Added
+- **Changes & Backups Restoration Interface:** Introduced a dedicated `Backups` navigation tab and `BackupsScreen` allowing users to see all modifications made by SysdSafe, inspect backed-up original unit files, and view active hardening drop-ins.
+- **Clean State Rollback:** Enabled one-click "Restore to Original State" functionality to undo hardening changes, remove override drop-ins, and safely reload and restart systemd services.
+- **Real-Time Override Tracking:** Implemented automated cross-referencing between SQLite `backups` records, local `~/sysdsafe_backups/` files, and active `/etc/systemd/system/*.d/sysdsafe-tier1.conf` overrides.
+- **Search & Filter Controls:** Added dynamic text filtering and status filtering (`All Records`, `Active Changes`, `Restored / Clean`) alongside jump-to-top and jump-to-bottom scroll controls.
+
+---
+
 ## [1.0.10] - 2026-10-05
 
 ### Added

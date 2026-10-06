@@ -1,10 +1,18 @@
-# SysdSafe
+# SysdSafe (v1.0.11)
 
-SysdSafe is a systemd service security auditing and hardening tool built with Flutter for Linux systems.
+SysdSafe is a graphical systemd service security auditing and hardening tool built with Flutter for Linux workstations and servers.
+
+## Features
+
+- **Systemd Security Auditing:** Performs automated vulnerability and exposure scoring (`systemd-analyze security`) across all active services.
+- **Safe Tiered Hardening:** Provides contextual recommendations and automated Tier-1 quick wins written via PolicyKit drop-in overrides.
+- **Changes & Backups Restoration Interface:** Tracks all modifications made by the tool, archives pre-fix service snapshots to SQLite and `~/sysdsafe_backups/`, and allows one-click rollback to known original states.
+- **Desktop Theme Awareness & Motor Accessibility:** Follows OS appearance settings (Light, Dark, System Default) with high-visibility scrollbars and drag-scrolling support.
+- **Shift-Left Security & Verification:** Developed under strict quality gates with CycloneDX SBOM generation and SonarQube quality gate verification.
 
 ## Documentation
 
-For full installation instructions, setup, and safe usage guidelines, please see the [User Guide](docs/USER_GUIDE.md).
+For full installation instructions, architecture diagrams, and safe rollback guidelines, please see the [User Guide](docs/USER_GUIDE.md).
 
 ## Support
 

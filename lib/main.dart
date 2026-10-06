@@ -1,4 +1,4 @@
-// Auto-incremented to version 1.0.10 for build release on 2026-10-05 (Rule CP-AutoIncrement / Rule CP-ChangeComments)
+// Auto-incremented to version 1.0.11 for build release on 2026-10-06 (Rule CP-AutoIncrement / Rule CP-ChangeComments)
 // Copyright (C) 2026 Chuck Talk <chuck@nordheim.online>
 // This file is part of SysdSafe.
 //
@@ -13,6 +13,7 @@ import 'dart:ffi';
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:google_fonts/google_fonts.dart';
@@ -26,6 +27,7 @@ import 'package:sysdsafe/paths.dart';
 import 'package:sysdsafe/scanner.dart';
 import 'package:sysdsafe/state.dart';
 import 'package:sysdsafe/ui/about.dart';
+import 'package:sysdsafe/ui/backups.dart';
 import 'package:sysdsafe/ui/dashboard.dart';
 import 'package:sysdsafe/ui/legal.dart';
 import 'package:sysdsafe/ui/logs.dart';
@@ -51,8 +53,9 @@ void sysdsafeFfiInit() {
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // (CP-ChangeComments: Enforce privileged execution on Linux to prevent unprivileged launch)
-  if (Platform.isLinux &&
+  // (CP-ChangeComments: Enforce privileged execution on Linux in release mode while allowing debug runs)
+  if (!kDebugMode &&
+      Platform.isLinux &&
       !Platform.environment.containsKey('FLUTTER_TEST') &&
       !Platform.environment.containsKey('SYSDSAFE_ALLOW_UNPRIVILEGED')) {
     try {
@@ -430,6 +433,7 @@ class _MainScreenState extends State<MainScreen> {
               children: [
                 DashboardScreen(services: services),
                 ServiceListScreen(services: services),
+                const BackupsScreen(),
                 const ReferenceScreen(),
                 const LogsScreen(),
                 const AboutScreen(),
@@ -450,6 +454,10 @@ class _MainScreenState extends State<MainScreen> {
             label: 'Dashboard',
           ),
           BottomNavigationBarItem(icon: Icon(Icons.list), label: 'Services'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.history),
+            label: 'Backups',
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.book), label: 'Reference'),
           BottomNavigationBarItem(
             icon: Icon(Icons.receipt_long),

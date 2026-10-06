@@ -35,6 +35,40 @@ class DirectiveExplanation {
   final String snippet;
 }
 
+/// Represents a stored backup entry for a systemd service before modifications were made.
+/// (CP-ChangeComments: Data model representing service configuration snapshots for rollback)
+class BackupRecord {
+  /// Constructor for [BackupRecord].
+  BackupRecord({
+    required this.id,
+    required this.serviceName,
+    required this.originalContent,
+    required this.timestamp,
+  });
+
+  /// Primary key ID in the SQLite backups table.
+  final int id;
+
+  /// Systemd service unit name (e.g., 'cups.service').
+  final String serviceName;
+
+  /// Original service definition content captured prior to modifications.
+  final String originalContent;
+
+  /// Timestamp string (ISO-8601) when the backup was captured.
+  final String timestamp;
+
+  /// Creates a [BackupRecord] instance from an SQLite map row.
+  factory BackupRecord.fromMap(Map<String, dynamic> map) {
+    return BackupRecord(
+      id: map['_id'] as int? ?? 0,
+      serviceName: map['service_name'] as String? ?? '',
+      originalContent: map['original_content'] as String? ?? '',
+      timestamp: map['timestamp'] as String? ?? '',
+    );
+  }
+}
+
 /// Helper class to initialize and perform database operations on Systemd hardening directives.
 class DatabaseHelper {
   DatabaseHelper._init();
@@ -266,6 +300,39 @@ CREATE TABLE IF NOT EXISTS app_settings (
       return maps.first['original_content']! as String;
     }
     return null;
+  }
+
+  /// Retrieves all service backups stored in the SQLite database ordered by ID descending.
+  /// (CP-ChangeComments: Enables the Backups & Restore UI to list all captured states)
+  Future<List<BackupRecord>> getAllBackups() async {
+    final db = await instance.database;
+    final maps = await db.query(
+      'backups',
+      orderBy: '_id DESC',
+    );
+    return maps.map((map) => BackupRecord.fromMap(map)).toList();
+  }
+
+  /// Deletes a specific service backup entry from SQLite by its unique ID.
+  /// (CP-ChangeComments: Allows removing individual stale backup entries)
+  Future<void> deleteBackup(int id) async {
+    final db = await instance.database;
+    await db.delete(
+      'backups',
+      where: '_id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  /// Deletes any existing backup record for the specified service name.
+  /// (CP-ChangeComments: Cleans up service backup after full reversion if needed)
+  Future<void> deleteBackupForService(String serviceName) async {
+    final db = await instance.database;
+    await db.delete(
+      'backups',
+      where: 'service_name = ?',
+      whereArgs: [serviceName],
+    );
   }
 
   /// Saves a key-value setting into the persistent `app_settings` table.

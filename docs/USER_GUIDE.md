@@ -51,30 +51,38 @@ Upon launch, SysdSafe runs a background scanner across your `/etc/systemd/system
 
 ---
 
-## 🔄 4. Auto-Fix, Backup, and Rollback System
+## 🔄 4. Changes, Backups, and Clean Restoration System
 
-To ensure system stability, SysdSafe employs an atomic backup and restore engine:
+To ensure complete control and system stability, SysdSafe features a dedicated **Backups & Changes** interface and an atomic backup/rollback engine:
 
 ```mermaid
 graph TD
-    Start([1. Apply Auto-Fix Triggered]) --> Backup[2. Archive original service configuration to ~/sysdsafe_backups/]
+    Start([1. Apply Auto-Fix Triggered]) --> Backup[2. Archive original service configuration to SQLite & ~/sysdsafe_backups/]
     Backup --> Polkit{3. Prompt User for Root authorization via named Polkit action}
-    Polkit -- Approved --> WriteDropIn[4. Write hardening drop-in override to /etc/systemd/system/]
+    Polkit -- Approved --> WriteDropIn[4. Write hardening drop-in override to /etc/systemd/system/<unit>.d/sysdsafe-tier1.conf]
     Polkit -- Denied --> Abort[5. Hardening cancelled - no settings modified]
     WriteDropIn --> Reload[6. Execute systemctl daemon-reload & restart service]
-    Reload --> Verify[7. Service restarts under hardened sandbox sandbox environment]
+    Reload --> Verify[7. Service restarts under hardened sandbox environment]
     
-    Verify --> IssueFound{User encounters daemon failure / runtime crash?}
-    IssueFound -- Yes --> Revert[8. Revert Auto-Fix Triggered]
-    IssueFound -- No --> Success([Service successfully hardened!])
-    Revert --> Restore[9. Delete custom drop-in configuration override file]
-    Restore --> RestoreBackup[10. Restore original configurations from ~/sysdsafe_backups/]
-    RestoreBackup --> Reload2[11. Execute systemctl daemon-reload & restart service]
-    Reload2 --> NormalState([Service returned to initial state])
+    Verify --> Inspect[8. Review in Backups Tab: View Original Config or Applied Drop-In]
+    Inspect --> RestoreTriggered{User requests rollback to clean state?}
+    RestoreTriggered -- Yes --> Revert[9. Restore to Original State Triggered]
+    RestoreTriggered -- No --> Keep([Hardening configuration retained])
+    Revert --> Restore[10. Privileged removal of override drop-in file]
+    Restore --> Reload2[11. Execute systemctl daemon-reload & restart service]
+    Reload2 --> NormalState([Service returned cleanly to original state!])
 ```
 
+### Dedicated Backups Screen (`Backups` Tab)
+*   **Overview Metrics:** Real-time summary counts for **Total Backups**, **Active Changes**, and **Restored / Original** units.
+*   **Search & Status Filtering:** Search by service name and filter between *All Records*, *Active Changes* (services currently running with SysdSafe overrides), and *Restored / Clean* (services in their original state).
+*   **View Original State:** Inspect the exact, full `systemctl cat` output recorded before any tool modifications were made, with one-click clipboard copying.
+*   **View Applied Changes:** View the active `/etc/systemd/system/<unit>.d/sysdsafe-tier1.conf` drop-in directives applied by SysdSafe.
+*   **One-Click Restore to Original State:** Removes the drop-in override, runs `systemctl daemon-reload`, restarts the unit, confirms post-restoration health, and resets single-service safety locks.
+*   **Backup Record Pruning:** For units that have been cleanly restored, users can safely purge historical backup snapshots from local SQLite storage.
+
 > [!TIP]
-> **Post-Apply Health Check**: After hardening a running service, SysdSafe automatically checks its status (`is-active`/`is-failed`). If the service degrades or crashes, SysdSafe proactively offers a one-click revert to instantly undo the changes.
+> **Post-Apply Health Check**: After hardening a running service, SysdSafe automatically checks its status (`is-active`/`is-failed`). If the service degrades or crashes, SysdSafe proactively offers an instant one-click revert to return the service to normal.
 
 ---
 

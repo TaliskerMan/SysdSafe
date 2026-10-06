@@ -40,12 +40,26 @@ class AboutScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'What is SysdSafe?',
-                  style: TextStyle(
-                    fontSize: appState.fontSizeBase + 4,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'What is SysdSafe?',
+                      style: TextStyle(
+                        fontSize: appState.fontSizeBase + 4,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Chip(
+                      label: Text(
+                        'v1.0.11',
+                        style: TextStyle(
+                          fontSize: appState.fontSizeBase - 1,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -70,6 +84,11 @@ class AboutScreen extends StatelessWidget {
                   context,
                   Icons.security,
                   'Live exposure analysis using systemd-analyze.',
+                ),
+                _buildFeatureItem(
+                  context,
+                  Icons.restore,
+                  'Changes & Backups management with one-click restore to original state.',
                 ),
                 _buildFeatureItem(
                   context,
