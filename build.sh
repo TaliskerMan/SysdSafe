@@ -38,6 +38,8 @@ if ! command -v syft &> /dev/null; then
 fi
 if command -v "${SYFT_BIN}" &> /dev/null; then
     "${SYFT_BIN}" dir:. \
+        --exclude "./*.deb" \
+        --exclude "./*.tar.gz" \
         --exclude ./venv \
         --exclude ./android \
         --exclude ./ios \
