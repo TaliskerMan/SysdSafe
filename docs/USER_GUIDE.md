@@ -1,165 +1,173 @@
-# SysdSafe — Hardening & Release Management Manual
+# SysdSafe — User Guide
 
-Welcome to **SysdSafe**! This utility is an advanced security auditing and hardening assistant built in Flutter to secure Linux systemd services. 
+SysdSafe is a graphical assistant for auditing and hardening systemd services on Debian- and Ubuntu-based Linux.
 
-SysdSafe's core philosophy is **"First, do no harm."** Systemd manages your Linux system's essential init tasks (network, login, hardware daemons). Hardening services blindly can break applications or crash your operating system. SysdSafe helps you review, understand, and apply tailored configurations to minimize attack surfaces without breaking your host.
+Its core philosophy is **"First, do no harm."** systemd runs the services your machine depends on: networking, logins, the desktop, remote access. Hardening them blindly can lock you out or break the system. SysdSafe helps you understand what each protection does, applies only a small set of low-risk settings for you, and keeps every change reversible.
 
 > [!IMPORTANT]
-> **Polkit Authorization & Least Privilege**
-> SysdSafe does **not** run as root. The GUI process runs entirely within unprivileged user space. When applying system changes, SysdSafe invokes Polkit via a dedicated root helper (`/usr/lib/sysdsafe/sysdsafe-helper`) bound to the `online.nordheim.sysdsafe.manage-service` action. This provides a clear, transparent authorization prompt for writing configuration drop-in files to `/etc/systemd/system/`.
+> **Privilege model (since 1.0.10)**
+> SysdSafe **runs as root**. When you start it from the menu, `/usr/bin/sysdsafe` relaunches it through `pkexec` (polkit action `online.nordheim.sysdsafe.gui`), which asks for an administrator password. If you start the binary directly without root, it relaunches itself the same way. Changes to services go through a separate, narrow root helper, `/usr/lib/sysdsafe/sysdsafe-helper` (polkit action `online.nordheim.sysdsafe.manage-service`). Use SysdSafe on machines you administer.
+>
+> To let the root app draw on your display, the launcher grants the local root user (only) access with `xhost +SI:localuser:root`. It revokes that grant when SysdSafe exits, is interrupted or is terminated.
 
 ---
 
-## ⚠️ 1. Safety Hardening Philosophy
+## 1. Safety rules
 
-Every Linux host has a unique environment. We enforce strict safety rules:
-
-1.  **Understand Host Dependencies:** Before locking down a service, examine its needs. Does it require network access? Does it need raw socket access? Does it write to `/var/`?
-2.  **Apply Controls Incrementally:** Never lock down multiple system services simultaneously. Audit one service, apply changes, reboot/restart, verify operations, and then move to the next.
-3.  **Research Directives:** Avoid applying security options unless you understand their functions (e.g., `ProtectSystem=strict` or `PrivateNetwork=yes`).
+1. **One service at a time.** Harden one service, restart it, test what you use it for, then move on. SysdSafe warns you if you start on a second service before testing the first.
+2. **Answer the questions honestly.** Each recommendation asks what the service needs, for example network access or home folders. A wrong answer is how a hardened service becomes a broken one.
+3. **Low risk is not no risk.** Tier 1 settings are safe for most standalone daemons, but not for every service. That's why some services are protected (section 4).
 
 ---
 
-## 🔒 2. Core Hardening Options
+## 2. How the audit works
 
-SysdSafe applies service overrides via systemd drop-in configuration files. Key directives include:
+SysdSafe runs `systemd-analyze security` and shows the result. Each service gets systemd's own exposure score and level:
 
-| Systemd Hardening Option | Action | Protection Target |
+| Level | Meaning (from systemd) |
+| :--- | :--- |
+| UNSAFE | Very few protections set |
+| EXPOSED | Many protections missing |
+| MEDIUM | Some protections set |
+| OK | Well protected |
+
+Open a service to see each directive systemd reports as **unset**, sorted into tiers:
+
+| Tier | Directives | How it's applied |
 | :--- | :--- | :--- |
-| `ProtectSystem=strict` | Mounts the OS directory tree (`/usr`, `/boot`, `/etc`) read-only for the service daemon. | Prevents unauthorized modification of core system binaries. |
-| `PrivateNetwork=yes` | Sets up a blank loopback network namespace for the daemon, disabling socket access. | Mitigates remote command execution and data exfiltration. |
-| `ProtectHome=yes` | Sandbox-isolates home folders (`/home`, `/root`) from the service runtime. | Safeguards user credentials and personal files. |
-| `PrivateDevices=yes` | Filters access to physical hardware devices under `/dev/` (e.g., raw disks, ports). | Prevents direct physical resource manipulation. |
-| `NoNewPrivileges=yes` | Prevents the daemon's child processes from gaining elevated permissions (e.g., via `setuid`). | Stops privilege escalation exploits. |
+| 1 · Quick wins (low risk) | `NoNewPrivileges`, `ProtectKernelTunables`, `ProtectControlGroups`, `ProtectKernelLogs`, `RestrictRealtime` | Auto-fix after you review and confirm, unless the service is protected |
+| 2 · Contextual (medium risk) | `PrivateNetwork`, `ProtectHome`, `ProtectSystem`, `PrivateTmp`, `RestrictNamespaces` | Manual: answer the question, then add the snippet with `sudo systemctl edit <unit>` |
+| 3 · Advanced (high risk) | `DynamicUser`, `SystemCallFilter`, `RestrictAddressFamilies` and any other directive | Manual only, with the reference docs |
+
+> [!WARNING]
+> `NoNewPrivileges=yes` stops a service **and everything it starts** from gaining privileges through setuid programs. On services that start user sessions or run commands for users (`sshd`, display managers, `cron`), that breaks `sudo` inside those sessions. SysdSafe never auto-applies Tier 1 to those services.
 
 ---
 
-## 📥 3. Installation & Setup
+## 3. Installation
 
-SysdSafe is natively distributed and deployed as a system-level Debian package (`.deb`).
+SysdSafe is distributed as a Debian package with a detached GPG signature.
 
-### Installation Commands
 ```bash
-# Install the Debian package
-sudo dpkg -i sysdsafe_*.deb
+# Verify the package
+gpg --import pubkey.asc
+gpg --verify sysdsafe_<version>_amd64.deb.sig sysdsafe_<version>_amd64.deb
 
-# If dependency errors occur, resolve them instantly:
-sudo apt-get install -f
+# Install (pulls in pandoc and the other dependencies)
+sudo apt install ./sysdsafe_<version>_amd64.deb
 ```
 
-Upon launch, SysdSafe runs a background scanner across your `/etc/systemd/system/` and `/lib/systemd/system/` tables. Services are categorized into **High**, **Medium**, and **Low** urgency based on risk factors (e.g., processes running as root, lack of sandboxing).
+On first launch, SysdSafe builds its directive reference from your system's man pages with `pandoc`.
 
 ---
 
-## 🔄 4. Changes, Backups, and Clean Restoration System
+## 4. Safeguards
 
-To ensure complete control and system stability, SysdSafe features a dedicated **Backups & Changes** interface and an atomic backup/rollback engine:
+### Before a change
 
-```mermaid
-graph TD
-    Start([1. Apply Auto-Fix Triggered]) --> Backup[2. Archive original service configuration to SQLite & ~/sysdsafe_backups/]
-    Backup --> Polkit{3. Prompt User for Root authorization via named Polkit action}
-    Polkit -- Approved --> WriteDropIn[4. Write hardening drop-in override to /etc/systemd/system/<unit>.d/sysdsafe-tier1.conf]
-    Polkit -- Denied --> Abort[5. Hardening cancelled - no settings modified]
-    WriteDropIn --> Reload[6. Execute systemctl daemon-reload & restart service]
-    Reload --> Verify[7. Service restarts under hardened sandbox environment]
-    
-    Verify --> Inspect[8. Review in Backups Tab: View Original Config or Applied Drop-In]
-    Inspect --> RestoreTriggered{User requests rollback to clean state?}
-    RestoreTriggered -- Yes --> Revert[9. Restore to Original State Triggered]
-    RestoreTriggered -- No --> Keep([Hardening configuration retained])
-    Revert --> Restore[10. Privileged removal of override drop-in file]
-    Restore --> Reload2[11. Execute systemctl daemon-reload & restart service]
-    Reload2 --> NormalState([Service returned cleanly to original state!])
+- **Backup or nothing.** SysdSafe saves the current definition (`systemctl cat <unit>`) to its database and to `/var/lib/sysdsafe/backups/<unit>.backup`. If the backup fails, nothing is changed.
+- **Review dialog.** Every directive to be added is listed with its question before you confirm.
+- **One service at a time.** You get a warning if you change a second service before testing the first. You can override it.
+- **Protected services.** Auto-fix is disabled, with a critical warning, for services where even Tier 1 can lock you out or break the system. Patterns are matched against the unit name without `.service`:
+  `user@*`, `user-runtime-dir@*`, `*greeter*`, `getty@*`, `serial-getty@*`, `autovt@*`, `container-getty@*`, `console-getty`, `ssh`, `sshd`, `sshd@*`, `systemd-*`, `dbus`, `dbus-broker`, `polkit`, `display-manager`, `gdm`, `gdm3`, `sddm`, `lightdm`, `lxdm`, `xdm`, `accounts-daemon`, `NetworkManager`, `networking`, `wpa_supplicant`, `cron`, `crond`, `anacron`, `atd`, `docker`, `containerd`, `podman`, `libvirtd`, `snapd`, `rescue`, `emergency`.
+- **Checked names.** Only `<name>.service` names made of systemd's unit-name characters are accepted. Names are always passed after `--` so they can't be read as options.
+
+### During the change
+
+- The root helper only accepts the drop-in path `/etc/systemd/system/<unit>.d/sysdsafe-tier1.conf` for the **same** unit it restarts. It refuses protected units, and it rejects any content other than `[Service]` and the five Tier 1 lines.
+- The file is written to a temporary name and renamed into place, byte for byte.
+- `systemctl try-restart` restarts the service only if it was already running.
+
+### After the change
+
+- **Health checks.** If the service was running, SysdSafe checks it immediately and again 20 seconds later. If it has failed or stopped, you're offered **Revert now**. These checks only see whether the service keeps running, not whether every feature still works, so test what you rely on.
+- **Changes & Backups tab.** Lists every service SysdSafe has touched, with the original definition and the applied drop-in. **Restore to Original State** removes the drop-in, reloads systemd, restarts the unit and reports whether it came back healthy. You can prune records for services that are back to normal.
+
+### Recovering without SysdSafe
+
+SysdSafe never edits your unit files. From any root shell, including a rescue environment:
+
+```bash
+sudo rm /etc/systemd/system/<unit>.d/sysdsafe-tier1.conf
+sudo systemctl daemon-reload
+sudo systemctl restart <unit>
 ```
-
-### Dedicated Backups Screen (`Backups` Tab)
-*   **Overview Metrics:** Real-time summary counts for **Total Backups**, **Active Changes**, and **Restored / Original** units.
-*   **Search & Status Filtering:** Search by service name and filter between *All Records*, *Active Changes* (services currently running with SysdSafe overrides), and *Restored / Clean* (services in their original state).
-*   **View Original State:** Inspect the exact, full `systemctl cat` output recorded before any tool modifications were made, with one-click clipboard copying.
-*   **View Applied Changes:** View the active `/etc/systemd/system/<unit>.d/sysdsafe-tier1.conf` drop-in directives applied by SysdSafe.
-*   **One-Click Restore to Original State:** Removes the drop-in override, runs `systemctl daemon-reload`, restarts the unit, confirms post-restoration health, and resets single-service safety locks.
-*   **Backup Record Pruning:** For units that have been cleanly restored, users can safely purge historical backup snapshots from local SQLite storage.
-
-> [!TIP]
-> **Post-Apply Health Check**: After hardening a running service, SysdSafe automatically checks its status (`is-active`/`is-failed`). If the service degrades or crashes, SysdSafe proactively offers an instant one-click revert to return the service to normal.
 
 ---
 
-## ⚙️ 5. Technical Stack & Dependencies
+## 5. Files and logs
 
-SysdSafe utilizes the following package layout:
+Because SysdSafe runs as root, it keeps its files in a root-only folder:
+
+| What | Where |
+| :--- | :--- |
+| Database (backups, settings, directive reference) | `/var/lib/sysdsafe/sysdsafe.db` |
+| Plain-text backups | `/var/lib/sysdsafe/backups/<unit>.backup` |
+| Application log | `/var/lib/sysdsafe/app.log` |
+| Latest audit (JSON) | `/var/lib/sysdsafe/hardening_audit.json` |
+| Audit report opened in your browser | `/run/user/<your uid>/sysdsafe/audit_viewer.html` |
+
+Upgrading from an earlier version:
+
+- **1.0.10–1.0.11:** the database is copied from root's application-support folder on first start.
+- **Up to 1.0.11:** plain-text backups in `~/sysdsafe_backups/`, in your home folder or in `/root`, still appear in the Backups tab. They are read, never deleted.
+
+Links in the app (About, the audit report, Email Support) open in **your** desktop session as your user, never as root. If SysdSafe can't tell who you are, it shows the link or path instead of opening it.
+
+### Support
+
+The **Logs** tab shows the log and has **Email Support**, which opens a draft to support@nordheim.online with the end of the log. To attach the full log or a backup:
+
+```bash
+sudo cp /var/lib/sysdsafe/app.log ~/ && sudo chown "$USER" ~/app.log
+```
+
+---
+
+## 6. Technical stack
 
 | Component | Library / Dependency | Role |
 | :--- | :--- | :--- |
-| **GUI Framework** | Flutter SDK & Dart | Renders the high-performance material interface. |
-| **Data Visuals** | `fl_chart` | Displays security risk distributions and threat metrics. |
-| **Settings Cache** | `sqflite_common_ffi` | Caches service logs and persistent audit results. |
-| **Render Engine** | `flutter_markdown_plus` | Renders parsed service man pages and context inline. |
-| **Launcher** | `url_launcher` | Handles external triggers, like opening default email client logs. |
+| GUI | Flutter SDK & Dart | Desktop interface |
+| Charts | `fl_chart` | Exposure distribution chart |
+| Storage | `sqflite_common_ffi`, `sqlite3` | Backups, settings, directive reference |
+| Reference rendering | `flutter_markdown_plus`, `pandoc` | Man pages rendered in the app |
+| Links | `url_launcher`, `xdg-open` via `runuser` | Opening links as the desktop user |
+| Privilege | polkit (`pkexec`) | Admin authentication |
+
+The interface uses the system's Noto Sans font (package `fonts-noto-core`) or falls back to the default font. No fonts are downloaded at runtime.
 
 ---
 
-## 📝 6. Logging & Technical Support
+## 7. Theme and accessibility
 
-SysdSafe tracks operations (audits, fixes, reverts) to a local app log file.
-
-*   **Log Destination Path:** `~/.local/state/sysdsafe/app.log`.
-*   **Audit File Path:** `~/.local/state/sysdsafe/hardening_audit.json`.
-*   **In-App Auditor:** View trace entries in real-time in the **Logs** tab.
-*   **Support Portal:** If a service fails to restore, navigate to the **Logs** tab and tap **Email Support**. Your default mail system will load with pre-filled support destination fields. Manually attach `~/sysdsafe_backups/` and `app.log` so our team can debug the environment.
-
-## 🎨 7. Desktop Theme Awareness & Accessibility Controls
-
-SysdSafe is designed with comprehensive desktop integration and motor accessibility accommodations:
-
-### Desktop Theme Synchronization
-*   **System Default (Auto):** Follows your Linux host desktop environment (GNOME, KDE, XFCE) appearance preference in real time via the Freedesktop Portal (`org.freedesktop.appearance.color-scheme`).
-*   **Manual Theme Selection:** Use the theme icon in the top AppBar to choose between **System Default** (`brightness_auto`), **Light Theme** (`light_mode`), or **Dark Theme** (`dark_mode`).
-*   **Persistent Preferences:** Your selected theme mode and base font size are stored in local SQLite storage and automatically restored across app restarts.
-
-### Accessible Scrolling & Motor Assistance
-*   **Mouse & Trackpad Drag Scrolling:** Users with motor impairments or difficulty with fine mouse-wheel coordination can click and drag anywhere in lists and pages to scroll naturally.
-*   **High-Visibility Scrollbars:** Persistent 14px-wide scrollbar tracks and thumbs remain visible at all times, providing clear visual orientation and easy click/touch targets.
-*   **Jump Navigation:** Quick "Scroll to Top" (`arrow_upward`) and "Scroll to Bottom" (`arrow_downward`) buttons are available on all long views (Service List, Reference, Service Detail, and Application Logs) for effortless one-click navigation.
-*   **Adaptive Font Scaling:** Font scaling (+/- in the AppBar) scales smoothly up to 19pt without clipping or layout overflow.
+- **System Default / Light / Dark**, via the theme button in the toolbar. System Default follows your desktop (Freedesktop portal `org.freedesktop.appearance.color-scheme`).
+- **Drag scrolling** with mouse, trackpad or stylus, for anyone who finds a mouse wheel hard to use.
+- **Wide, always-visible scrollbars** (14 px).
+- **Jump to top / bottom** buttons on long views.
+- **Text size** (+/- in the toolbar) up to 19 pt without clipping.
+- Theme and text size are remembered between sessions.
 
 ---
 
-## 🏗️ 8. Release & Debian Packaging Pipeline
+## 8. Release and packaging
 
-SysdSafe compiles, checksums, and signs release files automatically via internal packaging scripts:
+`scripts/package_deb.sh` reads the version from `pubspec.yaml`, builds the Flutter Linux release, and assembles the `.deb`:
 
-```mermaid
-graph TD
-    StartPipeline([Start: package_deb.sh]) --> Version[1. Read version dynamically from pubspec.yaml]
-    Version --> Build[2. Compile Flutter Linux release target]
-    Build --> Struct[3. Build Debian folders: DEBIAN, bin, opt, share/applications, pixmaps]
-    Struct --> Wrapper[4. Create /usr/bin/sysdsafe wrapper script]
-    Wrapper --> Desktop[5. Generate desktop menu configurations]
-    Desktop --> Control[6. Populate DEBIAN/control file parameters]
-    Control --> Deb[7. Build .deb package via dpkg-deb --build]
-    Deb --> Checksum[8. Execute publish_release.sh: Compute SHA512 checks file]
-    Checksum --> Export[9. Export GPG Public Key pubkey.asc for user validation]
-    Export --> Sign[10. Sign .deb with GPG key 1779CD0F50DBB64C187908264863C73517D810F8]
-    Sign --> Publish[11. Run GitHub CLI gh release create uploading deb, sig, sha512, and pubkey.asc]
-    Publish --> EndPipeline([End: Official release published on GitHub])
-```
+- `/opt/sysdsafe/` — the application
+- `/usr/bin/sysdsafe` — the root launcher (pkexec, display grant with automatic revoke)
+- `/usr/lib/sysdsafe/sysdsafe-helper` — the root helper (root:root, 0755)
+- `/usr/share/polkit-1/actions/online.nordheim.sysdsafe.policy` — the two polkit actions
 
-### Released Deliverables
-*   **`.deb` Installer:** `sysdsafe_${VERSION}_amd64.deb`
-*   **Detached Signature:** `sysdsafe_${VERSION}_amd64.deb.sig`
-*   **Checksum Verification:** `sysdsafe_${VERSION}_amd64.deb.sha512`
-*   **GPG Public Key:** `pubkey.asc` (used to verify signature authenticity)
+`scripts/publish_release.sh` writes a SHA-512 checksum, exports the public key (`pubkey.asc`), makes a detached GPG signature with key `1779CD0F50DBB64C187908264863C73517D810F8`, and publishes the release on GitHub.
 
-To verify the signature manually, download the deliverables and execute:
-```bash
-# Import the public key
-gpg --import pubkey.asc
+### Release deliverables
 
-# Verify the package signature
-gpg --verify sysdsafe_*.deb.sig sysdsafe_*.deb
-```
+- `sysdsafe_<version>_amd64.deb`
+- `sysdsafe_<version>_amd64.deb.sig` (detached signature)
+- `sysdsafe_<version>_amd64.deb.sha512`
+- `pubkey.asc`
 
 ---
-*SysdSafe is open-source software distributed under the GNU Affero General Public License v3.0 (AGPL-3.0).*
+
+*SysdSafe is open-source software under the GNU Affero General Public License v3.0 (AGPL-3.0). It comes with no warranty.*

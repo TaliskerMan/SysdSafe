@@ -728,7 +728,7 @@ class _BackupsScreenState extends State<BackupsScreen> {
                   const SizedBox(width: 4),
                   Flexible(
                     child: Text(
-                      '~/sysdsafe_backups/${item.serviceName}.backup',
+                      item.backupFilePath!,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: appState.fontSizeBase - 2,

@@ -4,6 +4,32 @@ All notable changes to the SysdSafe project are documented in this file. This pr
 
 ---
 
+## [1.0.12] - 2026-10-07
+
+### Security / Safety
+- **Wider protected-service list:** Tier 1 auto-fix is now refused for services where even low-risk settings can lock users out or break the system: `sshd`/`ssh`, display managers (`gdm`, `gdm3`, `sddm`, `lightdm`, …), `getty`, `cron`/`atd`, `systemd-*`, D-Bus, polkit, NetworkManager, container/VM managers and more. Previously only `user@*` and `*greeter*` were blocked. The list is enforced in both the app and the root helper, and a unit test keeps them in sync.
+- **Stricter root helper:** the drop-in directory and file must belong to the same unit being restarted. Protected units are refused. Content must be `[Service]` plus the five Tier 1 lines only. The drop-in is written via a temporary file and renamed.
+- **Stricter unit-name validation:** only `<name>.service` with systemd's unit-name characters; names starting with `-` are rejected.
+- **No root browser or mail client:** links, the audit report and Email Support now open as the desktop user (`runuser` + `xdg-open`), never as root. If the user can't be determined, SysdSafe shows the path instead.
+- **No runtime font download:** removed `google_fonts`; the UI uses the system Noto Sans.
+- **Display grant always revoked:** the launcher revokes `xhost +SI:localuser:root` on exit, Ctrl-C, hang-up and termination.
+- **Delayed health check:** after applying, the service is re-checked after 20 seconds, with **Revert now** offered if it has failed or stopped.
+
+### Fixed
+- **Legal UI License Display:** resolved missing license in Legal screen by bundling `LICENSE` into Flutter application assets (`assets/LICENSE`) and adding multi-path fallback (`/usr/share/doc/sysdsafe/copyright`, `/opt/sysdsafe/LICENSE`, executable sibling directories). Also ensured `scripts/package_deb.sh` installs the license to `/usr/share/doc/sysdsafe/copyright` and `/opt/sysdsafe/LICENSE`.
+- **Nordheim Online Logo Link (CP-NordheimLogo):** added interactive URL launcher on Nordheim Online logo (`assets/noln.png`) in `LegalScreen` directing users to `https://nordheim.online`.
+- **Version Chip Sync (CP-AutoIncrement):** updated About page version chip to reflect release v1.0.12.
+- Logs, database and plain-text backups went to root's home (`/root/...`) after 1.0.10, not the paths in the docs. They now live in `/var/lib/sysdsafe/` (root only). The old database is copied across, and backups in `~/sysdsafe_backups/` (user's home or `/root`) still appear in the Backups tab.
+- The Backups tab showed a hard-coded `~/sysdsafe_backups/` path; it now shows the real file.
+- The Email Support draft contained literal `\n` instead of line breaks.
+- `pandoc` was required but missing from the package dependencies.
+
+### Changed
+- Tier 1 advice for `NoNewPrivileges` and `ProtectKernelTunables` no longer says "almost universally safe" / "safe for 99%". It now names the services they can break.
+- README, User Guide and SECURITY.md rewritten to match the actual privilege model, audit source, file locations and safeguards.
+
+---
+
 ## [1.0.11] - 2026-10-06
 
 ### Added

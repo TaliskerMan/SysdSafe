@@ -15,6 +15,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:sysdsafe/main.dart';
 import 'package:sysdsafe/man_parser.dart';
+import 'package:sysdsafe/paths.dart';
 
 /// Representation of a systemd hardening directive and its description/snippet.
 class DirectiveExplanation {
@@ -100,8 +101,28 @@ class DatabaseHelper {
         ),
       );
     }
-    final dbPath = await getApplicationSupportDirectory();
-    final path = join(dbPath.path, filePath);
+    final String path;
+    if (sysdsafeIsRoot) {
+      // Installed app runs as root: keep the database with the backups in
+      // /var/lib/sysdsafe. 1.0.10–1.0.11 kept it in root's application
+      // support folder; copy that one across once so backup records survive.
+      final stateDir = await sysdsafeStateDir();
+      path = join(stateDir.path, filePath);
+      if (!await File(path).exists()) {
+        try {
+          final oldDir = await getApplicationSupportDirectory();
+          final oldDb = File(join(oldDir.path, filePath));
+          if (await oldDb.exists()) {
+            await oldDb.copy(path);
+          }
+        } catch (_) {
+          // No previous database: start fresh.
+        }
+      }
+    } else {
+      final dbPath = await getApplicationSupportDirectory();
+      path = join(dbPath.path, filePath);
+    }
 
     databaseFactory = createDatabaseFactoryFfi(ffiInit: sysdsafeFfiInit);
     return databaseFactory.openDatabase(

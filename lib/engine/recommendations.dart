@@ -45,7 +45,7 @@ class RecommendationEngine {
       humanQuestion:
           'Is this service safe to prevent from escalating privileges?',
       humanAdvice:
-          'Almost universally safe. Ensures the service processes cannot gain new privileges through setuid/setgid.',
+          'Safe for most standalone daemons. Stops the service and anything it starts from gaining privileges through setuid/setgid. Do NOT use on services that start user sessions or run programs for users (sshd, display managers, cron): sudo would stop working inside them. SysdSafe never auto-applies it to those services.',
       snippet: 'NoNewPrivileges=yes',
     ),
     'ProtectKernelTunables': HardeningAdvice(
@@ -53,7 +53,7 @@ class RecommendationEngine {
       directive: 'ProtectKernelTunables',
       humanQuestion: 'Can we restrict modifications to kernel variables?',
       humanAdvice:
-          'Safe for 99% of services. Prevents altering sysctl or kernel variables.',
+          'Safe for most services. Prevents altering sysctl or kernel variables. Do not use on tools whose job is tuning the kernel (sysctl, tuned, power or performance managers).',
       snippet: 'ProtectKernelTunables=yes',
     ),
     'ProtectControlGroups': HardeningAdvice(

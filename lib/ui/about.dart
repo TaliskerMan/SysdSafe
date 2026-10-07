@@ -14,7 +14,7 @@ import 'package:sysdsafe/database.dart';
 import 'package:sysdsafe/state.dart';
 import 'package:sysdsafe/ui/legal.dart';
 import 'package:sysdsafe/ui/widgets/page_container.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:sysdsafe/desktop_launcher.dart';
 
 /// Screen widget that displays general information, features, licensing, and
 /// system manual page synchronization controls for SysdSafe.
@@ -50,9 +50,10 @@ class AboutScreen extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                    // CP-AutoIncrement (106) & CP-ChangeComments (107): Display current release v1.0.12
                     Chip(
                       label: Text(
-                        'v1.0.11',
+                        'v1.0.12',
                         style: TextStyle(
                           fontSize: appState.fontSizeBase - 1,
                           fontWeight: FontWeight.bold,
@@ -109,7 +110,7 @@ class AboutScreen extends StatelessWidget {
                 // CP-NordheimLogo (116): Nordheim Online logo icon hyperlinked to https://nordheim.online
                 Center(
                   child: InkWell(
-                    onTap: () => launchUrl(Uri.parse('https://nordheim.online')),
+                    onTap: () => DesktopLauncher.open(Uri.parse('https://nordheim.online')),
                     child: Column(
                       children: [
                         Image.asset('assets/noln.png', height: 48),
@@ -158,7 +159,7 @@ class AboutScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 InkWell(
-                  onTap: () => launchUrl(
+                  onTap: () => DesktopLauncher.open(
                     Uri.parse('https://github.com/TaliskerMan/SysdSafe'),
                   ),
                   child: Text(

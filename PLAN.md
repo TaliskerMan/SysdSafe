@@ -11,3 +11,13 @@
   - [x] Add unit tests in `test/backup_test.dart`
   - [x] Run `flutter analyze`, `flutter test`, and `code-gate.sh`
   - [x] Run local SonarQube quality gate scan
+- Release v1.0.12 (Completed):
+  - [x] Fix legal UI license display by bundling `assets/LICENSE` with filesystem fallback
+  - [x] Link Nordheim Online logo to https://nordheim.online per CP-NordheimLogo
+  - [x] Auto-increment version chip in AboutScreen to v1.0.12
+  - [x] Install LICENSE in Debian packaging (/usr/share/doc/sysdsafe/copyright and /opt/sysdsafe/LICENSE)
+  - [x] Add unit and widget tests for license loading, logo linking, and version display
+  - [x] Enforce GPG release signing with Chuck Talk key 1779CD0F
+  - [x] Pass ShiftLeft gate (code-gate.sh: static analysis, Syft CycloneDX SBOM, OSV-Scanner, Grype)
+  - [x] Package 64-bit DEB, sign with GPG detached signature, compute SHA512, archive to ~/NOBuilds
+  - [x] Publish v1.0.12 release on GitHub

@@ -17,6 +17,7 @@ import 'package:sysdsafe/database.dart';
 import 'package:sysdsafe/engine/recommendations.dart';
 import 'package:sysdsafe/hardening.dart';
 import 'package:sysdsafe/logging.dart';
+import 'package:sysdsafe/paths.dart';
 import 'package:sysdsafe/scanner.dart';
 import 'package:sysdsafe/state.dart';
 
@@ -111,6 +112,23 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
       return;
     }
 
+    // First, do no harm: never auto-harden services where even Tier 1 can
+    // lock users out (the UI hides the button too; this is the backstop, and
+    // the root helper enforces the same list).
+    if (Hardening.isProtectedService(serviceName)) {
+      LogService.warning('Auto-fix refused for protected service $serviceName');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '$serviceName is protected: auto-fix is disabled because it can lock you out.',
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
     final dirPath = '/etc/systemd/system/$serviceName.d';
     final filePath = '$dirPath/sysdsafe-tier1.conf';
 
@@ -141,11 +159,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
         );
 
         // 2. Save to Plain Text File for Live USB recovery
-        final homeDir = Platform.environment['HOME'] ?? '/root';
-        final backupDir = Directory('$homeDir/sysdsafe_backups');
-        if (!await backupDir.exists()) {
-          await backupDir.create(recursive: true);
-        }
+        final backupDir = await sysdsafeBackupDir();
         final backupFile = File('${backupDir.path}/$serviceName.backup');
         await backupFile.writeAsString(originalContent);
         LogService.info('Backup saved to ${backupFile.path}');
@@ -172,6 +186,21 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
 
     // Build the drop-in body with REAL newlines so it is written byte-for-byte.
     final fileContent = Hardening.buildDropInContent(tier1Advice);
+
+    // Only the Tier 1 allowlist may ever be written (the helper enforces the
+    // same rule; checking here gives a clear message instead of a helper error).
+    if (!Hardening.isAllowedTier1Content(fileContent)) {
+      LogService.error('Refusing drop-in with non-Tier-1 lines for $serviceName');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Auto-fix aborted: only Tier 1 settings can be applied automatically.'),
+          ),
+        );
+      }
+      setState(() => isLoading = false);
+      return;
+    }
 
     try {
       final result = await _runPrivileged(
@@ -413,14 +442,14 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
     }
   }
 
-  /// After an apply, checks whether a previously-active service is now failed or
-  /// inactive and, if so, surfaces a one-tap revert action.
-  Future<void> _verifyHealthAndOfferRevert(
-    String serviceName,
-    bool wasActive,
-  ) async {
-    if (!wasActive) return; // Nothing to degrade if it wasn't running.
+  /// How long after an apply SysdSafe checks the service a second time.
+  /// Many services fail a few seconds after start (config parse, a socket
+  /// they can no longer open), which an immediate check misses.
+  static const Duration _delayedHealthCheck = Duration(seconds: 20);
 
+  /// Returns a description of the problem if [serviceName] has failed or is no
+  /// longer active, or null if it looks healthy.
+  Future<String?> _healthProblem(String serviceName) async {
     var failed = false;
     try {
       final isFailed = await Process.run('systemctl', [
@@ -433,17 +462,16 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
     } catch (_) {}
 
     final stillActive = await _isServiceActive(serviceName);
-    if (!failed && stillActive) return; // Healthy — nothing to do.
+    if (!failed && stillActive) return null;
+    return 'failed=$failed, active=$stillActive';
+  }
 
-    LogService.error(
-      'Service $serviceName is no longer healthy after hardening '
-      '(failed=$failed, active=$stillActive). Offering revert.',
-    );
+  void _offerRevert(String serviceName, String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('"$serviceName" did not stay healthy after hardening.'),
-        duration: const Duration(seconds: 12),
+        content: Text(message),
+        duration: const Duration(seconds: 15),
         backgroundColor: Colors.red.shade700,
         action: SnackBarAction(
           label: 'Revert now',
@@ -452,6 +480,50 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
         ),
       ),
     );
+  }
+
+  /// After an apply, checks whether a previously-active service has failed or
+  /// stopped — immediately, and again after [_delayedHealthCheck] — and if so
+  /// offers a one-tap revert. This only sees whether the service keeps
+  /// running; it cannot tell whether every feature still works.
+  Future<void> _verifyHealthAndOfferRevert(
+    String serviceName,
+    bool wasActive,
+  ) async {
+    if (!wasActive) return; // Nothing to degrade if it wasn't running.
+
+    final problem = await _healthProblem(serviceName);
+    if (problem != null) {
+      LogService.error(
+        'Service $serviceName is no longer healthy after hardening '
+        '($problem). Offering revert.',
+      );
+      _offerRevert(
+        serviceName,
+        '"$serviceName" did not stay healthy after hardening.',
+      );
+      return;
+    }
+
+    // Second look, without blocking the screen. If the user has left this
+    // screen the result is still logged; the Backups tab can restore it.
+    Future<void>.delayed(_delayedHealthCheck, () async {
+      final later = await _healthProblem(serviceName);
+      if (later == null) {
+        LogService.info(
+          '$serviceName still healthy ${_delayedHealthCheck.inSeconds}s after hardening',
+        );
+        return;
+      }
+      LogService.error(
+        'Service $serviceName failed ${_delayedHealthCheck.inSeconds}s after '
+        'hardening ($later). Offering revert.',
+      );
+      _offerRevert(
+        serviceName,
+        '"$serviceName" stopped working ${_delayedHealthCheck.inSeconds} seconds after hardening.',
+      );
+    });
   }
 
   /// Reverts any automatically applied Tier 1 hardening configuration by removing the
@@ -483,11 +555,12 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
       );
       if (result.exitCode == 0) {
         LogService.info('Auto-Fix reverted successfully for $serviceName');
+        final backupDir = await sysdsafeBackupDir();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Text(
-                'Auto-Fix reverted! Original config available in ~/sysdsafe_backups/',
+                'Auto-Fix reverted. The original definition is kept in ${backupDir.path}/',
               ),
             ),
           );
@@ -524,9 +597,9 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
       tieredAdvice[advice.tier]?.add(advice);
     }
 
-    final isDangerousService =
-        widget.service.name.startsWith('user@') ||
-        widget.service.name.contains('greeter');
+    final isDangerousService = Hardening.isProtectedService(
+      widget.service.name,
+    );
 
     return Scaffold(
       appBar: AppBar(

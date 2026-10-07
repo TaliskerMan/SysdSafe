@@ -45,9 +45,15 @@ mkdir -p "$DEB_DIR/usr/share/icons/hicolor/256x256/apps"
 mkdir -p "$DEB_DIR/usr/lib/$APP_NAME"
 mkdir -p "$DEB_DIR/usr/share/polkit-1/actions"
 mkdir -p "$DEB_DIR/opt/$APP_NAME"
+mkdir -p "$DEB_DIR/usr/share/doc/$APP_NAME"
 
 # Copy binary and assets
 cp -r "$BUILD_DIR"/* "$DEB_DIR/opt/$APP_NAME/"
+
+# Install License files per Debian policy and application accessibility
+install -m 0644 LICENSE "$DEB_DIR/opt/$APP_NAME/LICENSE"
+install -m 0644 LICENSE "$DEB_DIR/usr/share/doc/$APP_NAME/copyright"
+install -m 0644 LICENSE "$DEB_DIR/usr/share/doc/$APP_NAME/LICENSE"
 
 # Install the privileged helper and its polkit policy (P1-#5).
 install -m 0755 linux/packaging/sysdsafe-helper "$DEB_DIR/usr/lib/$APP_NAME/sysdsafe-helper"
@@ -65,12 +71,25 @@ if [ "$(id -u)" -eq 0 ]; then
     exec ./sysdsafe "$@"
 fi
 
-# Ensure X11/XWayland display authorization for local root user if graphical environment exists
+# Revoke the display grant when this wrapper ends for ANY reason (normal exit,
+# Ctrl-C, logout/SIGHUP, SIGTERM). Only SIGKILL can bypass this; the grant is
+# also dropped when the X session ends.
 GRANTED_XHOST=0
+revoke_xhost() {
+    if [ "$GRANTED_XHOST" -eq 1 ] && command -v xhost >/dev/null 2>&1; then
+        xhost -SI:localuser:root >/dev/null 2>&1 || true
+        GRANTED_XHOST=0
+    fi
+}
+trap revoke_xhost EXIT
+trap 'exit 130' INT
+trap 'exit 129' HUP
+trap 'exit 143' TERM
+
+# Allow the local root user (only) to draw on this X11/XWayland display
 if command -v xhost >/dev/null 2>&1; then
     if ! xhost 2>/dev/null | grep -qi 'SI:localuser:root$'; then
-        xhost +SI:localuser:root >/dev/null 2>&1
-        GRANTED_XHOST=1
+        xhost +SI:localuser:root >/dev/null 2>&1 && GRANTED_XHOST=1
     fi
 fi
 
@@ -82,14 +101,7 @@ fi
 
 # Execute SysdSafe via pkexec to enforce root privileges
 pkexec /opt/sysdsafe/sysdsafe "$@"
-STATUS=$?
-
-# Revoke display authorization if granted by this wrapper invocation
-if [ "$GRANTED_XHOST" -eq 1 ] && command -v xhost >/dev/null 2>&1; then
-    xhost -SI:localuser:root >/dev/null 2>&1 || true
-fi
-
-exit $STATUS
+exit $?
 EOF
 chmod +x "$DEB_DIR/usr/bin/$APP_NAME"
 
@@ -117,11 +129,13 @@ Version: $VERSION
 Section: utils
 Priority: optional
 Architecture: ${ARCH}
-Depends: polkit | policykit-1, systemd, libsqlite3-0 | libsqlite3-dev
+Depends: polkit | policykit-1, systemd, libsqlite3-0 | libsqlite3-dev, pandoc, util-linux
+Recommends: x11-xserver-utils, xdg-utils, fonts-noto-core
 Maintainer: Chuck Talk <chuck@nordheim.online>
 Description: SysdSafe - Systemd Service Security Hardening Tool
- A Flutter application designed to audit and harden systemd services 
- using automated Polkit drop-in configurations.
+ Audits systemd services with systemd-analyze security, explains each
+ missing protection, and applies low-risk (Tier 1) hardening as a separate,
+ reversible drop-in file. Runs as root after polkit authentication.
 EOF
 
 # Set permissions

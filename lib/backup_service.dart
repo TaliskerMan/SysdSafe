@@ -14,6 +14,7 @@ import 'package:path/path.dart' as p;
 import 'package:sysdsafe/database.dart';
 import 'package:sysdsafe/hardening.dart';
 import 'package:sysdsafe/logging.dart';
+import 'package:sysdsafe/paths.dart';
 
 /// Represents a combined backup and active status snapshot for a Systemd service.
 /// (CP-ChangeComments: Encapsulates both DB backup history and real-time filesystem state)
@@ -102,11 +103,32 @@ class BackupService {
   /// Standard path for systemd system drop-in directory.
   static const String kSystemdSystemDir = '/etc/systemd/system';
 
-  /// Discovers and loads all backup records, cross-referencing SQLite, plain text
-  /// files at `~/sysdsafe_backups/`, and real-time `/etc/systemd/system` overrides.
+  /// Largest backup text file read from disk (a unit definition is a few KB).
+  static const int _maxBackupFileBytes = 1024 * 1024;
+
+  /// Every folder that may hold `<unit>.backup` files: the current one first,
+  /// then pre-1.0.12 locations (see [legacyBackupDirs]).
+  Future<List<Directory>> _backupDirs() async {
+    return [await sysdsafeBackupDir(), ...legacyBackupDirs()];
+  }
+
+  /// Finds the plain-text backup for [serviceName] in any known folder.
+  Future<String?> _findBackupFile(String serviceName, List<Directory> dirs) async {
+    for (final dir in dirs) {
+      final file = File(p.join(dir.path, '$serviceName.backup'));
+      if (await file.exists()) return file.path;
+    }
+    return null;
+  }
+
+  /// Discovers and loads all backup records, cross-referencing SQLite, plain
+  /// text backup files (current and legacy folders), and live
+  /// `/etc/systemd/system` overrides. Read-only: backup files are displayed,
+  /// never applied.
   Future<List<BackupStatusItem>> loadBackups() async {
     final dbBackups = await DatabaseHelper.instance.getAllBackups();
     final items = <String, BackupStatusItem>{};
+    final backupDirs = await _backupDirs();
 
     // 1. Process SQLite backups
     for (final b in dbBackups) {
@@ -120,9 +142,7 @@ class BackupService {
         } catch (_) {}
       }
 
-      final homeDir = Platform.environment['HOME'] ?? '/root';
-      final backupFilePath = '$homeDir/sysdsafe_backups/$serviceName.backup';
-      final hasBackupFile = await File(backupFilePath).exists();
+      final backupFilePath = await _findBackupFile(serviceName, backupDirs);
 
       items[serviceName] = BackupStatusItem(
         id: b.id,
@@ -131,53 +151,56 @@ class BackupService {
         timestamp: b.timestamp,
         isOverrideActive: hasDropIn,
         dropInContent: dropInContent,
-        backupFilePath: hasBackupFile ? backupFilePath : null,
+        backupFilePath: backupFilePath,
       );
     }
 
-    // 2. Discover any external disk backups in ~/sysdsafe_backups not in DB
-    try {
-      final homeDir = Platform.environment['HOME'] ?? '/root';
-      final backupDir = Directory('$homeDir/sysdsafe_backups');
-      if (await backupDir.exists()) {
-        final entries = backupDir.listSync();
-        for (final entry in entries) {
-          if (entry is File && entry.path.endsWith('.backup')) {
-            final fileName = p.basename(entry.path);
-            final serviceName = fileName.substring(0, fileName.length - '.backup'.length);
+    // 2. Discover plain-text backups not yet in the database, in the current
+    //    backup folder and in pre-1.0.12 ~/sysdsafe_backups folders.
+    for (final backupDir in backupDirs) {
+      try {
+        if (await backupDir.exists()) {
+          final entries = backupDir.listSync();
+          for (final entry in entries) {
+            if (entry is File && entry.path.endsWith('.backup')) {
+              final fileName = p.basename(entry.path);
+              final serviceName = fileName.substring(0, fileName.length - '.backup'.length);
 
-            if (!items.containsKey(serviceName) && Hardening.isSafeServiceName(serviceName)) {
-              final content = await entry.readAsString();
-              final stat = await entry.stat();
-              final ts = stat.modified.toIso8601String();
+              if (!items.containsKey(serviceName) &&
+                  Hardening.isSafeServiceName(serviceName) &&
+                  await entry.length() <= _maxBackupFileBytes) {
+                final content = await entry.readAsString();
+                final stat = await entry.stat();
+                final ts = stat.modified.toIso8601String();
 
-              // Auto-sync into SQLite to maintain database consistency
-              await DatabaseHelper.instance.backupServiceState(serviceName, content);
+                // Auto-sync into SQLite to maintain database consistency
+                await DatabaseHelper.instance.backupServiceState(serviceName, content);
 
-              final dropInFile = File('$kSystemdSystemDir/$serviceName.d/sysdsafe-tier1.conf');
-              final hasDropIn = await dropInFile.exists();
-              String? dropInContent;
-              if (hasDropIn) {
-                try {
-                  dropInContent = await dropInFile.readAsString();
-                } catch (_) {}
+                final dropInFile = File('$kSystemdSystemDir/$serviceName.d/sysdsafe-tier1.conf');
+                final hasDropIn = await dropInFile.exists();
+                String? dropInContent;
+                if (hasDropIn) {
+                  try {
+                    dropInContent = await dropInFile.readAsString();
+                  } catch (_) {}
+                }
+
+                items[serviceName] = BackupStatusItem(
+                  id: -1,
+                  serviceName: serviceName,
+                  originalContent: content,
+                  timestamp: ts,
+                  isOverrideActive: hasDropIn,
+                  dropInContent: dropInContent,
+                  backupFilePath: entry.path,
+                );
               }
-
-              items[serviceName] = BackupStatusItem(
-                id: -1,
-                serviceName: serviceName,
-                originalContent: content,
-                timestamp: ts,
-                isOverrideActive: hasDropIn,
-                dropInContent: dropInContent,
-                backupFilePath: entry.path,
-              );
             }
           }
         }
+      } catch (e) {
+        LogService.error('Error scanning backup directory ${backupDir.path}: $e');
       }
-    } catch (e) {
-      LogService.error('Error scanning backup directory: $e');
     }
 
     // 3. Discover any active sysdsafe-tier1.conf drop-ins on the system

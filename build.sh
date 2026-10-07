@@ -63,9 +63,10 @@ sha512sum "$DEB_FILE" > "${DEB_FILE}.sha512"
 
 echo "Signing package with GPG..."
 if command -v gpg > /dev/null 2>&1; then
-    rm -f "${DEB_FILE}.asc"
-    gpg --batch --no-tty --local-user chuck@nordheim.online --detach-sign --armor "$DEB_FILE"
-    gpg --batch --no-tty --export -a chuck@nordheim.online > "pubkey.asc"
+    rm -f "${DEB_FILE}.asc" "${DEB_FILE}.sig"
+    gpg --batch --no-tty --local-user 1779CD0F50DBB64C187908264863C73517D810F8 --detach-sign --armor "$DEB_FILE"
+    gpg --batch --no-tty --local-user 1779CD0F50DBB64C187908264863C73517D810F8 --detach-sign --output "${DEB_FILE}.sig" "$DEB_FILE"
+    gpg --batch --no-tty --export -a 1779CD0F50DBB64C187908264863C73517D810F8 > "pubkey.asc"
 else
     echo "WARNING: GPG not found - package NOT signed!"
 fi
@@ -78,6 +79,7 @@ mkdir -p "${NOBUILDS_DIR}"
 
 cp "${DEB_FILE}" "${NOBUILDS_DIR}/"
 cp "${DEB_FILE}.asc" "${NOBUILDS_DIR}/" || true
+cp "${DEB_FILE}.sig" "${NOBUILDS_DIR}/" || true
 cp "${DEB_FILE}.sha512" "${NOBUILDS_DIR}/" || true
 cp pubkey.asc "${NOBUILDS_DIR}/" || true
 cp LICENSE "${NOBUILDS_DIR}/"

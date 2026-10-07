@@ -13,7 +13,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:sysdsafe/logging.dart';
 import 'package:sysdsafe/state.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:sysdsafe/desktop_launcher.dart';
 
 /// A screen that displays the system and application logs to the user.
 ///
@@ -82,12 +82,14 @@ class _LogsScreenState extends State<LogsScreen> {
         'subject': 'SysdSafe Support Request',
         // Provide instructions since the body might be too large for mailto
         'body':
-            'Please describe your issue here:\\n\\n\\n--- LOGS BELOW ---\\n\\n${_logs.length > 5000 ? _logs.substring(_logs.length - 5000) : _logs}',
+            'Please describe your issue here:\n\n\n'
+            '--- LOGS BELOW (last 5000 characters of ${LogService.logFilePath ?? 'app.log'}) ---\n\n'
+            '${_logs.length > 5000 ? _logs.substring(_logs.length - 5000) : _logs}',
       },
     );
 
     try {
-      if (!await launchUrl(emailLaunchUri)) {
+      if (!await DesktopLauncher.open(emailLaunchUri)) {
         throw Exception('Could not launch email client.');
       }
     } catch (error) {

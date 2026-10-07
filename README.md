@@ -1,26 +1,41 @@
-# SysdSafe (v1.0.11)
+# SysdSafe (v1.0.12)
 
-SysdSafe is a graphical systemd service security auditing and hardening tool built with Flutter for Linux workstations and servers.
+SysdSafe is a graphical tool for auditing and hardening systemd services on Debian- and Ubuntu-based Linux. It reads systemd's own security audit (`systemd-analyze security`), explains each missing protection in plain language, and can apply a small set of low-risk settings for you as a separate, reversible drop-in file.
 
 ## Features
 
-- **Systemd Security Auditing:** Performs automated vulnerability and exposure scoring (`systemd-analyze security`) across all active services.
-- **Safe Tiered Hardening:** Provides contextual recommendations and automated Tier-1 quick wins written via PolicyKit drop-in overrides.
-- **Changes & Backups Restoration Interface:** Tracks all modifications made by the tool, archives pre-fix service snapshots to SQLite and `~/sysdsafe_backups/`, and allows one-click rollback to known original states.
-- **Desktop Theme Awareness & Motor Accessibility:** Follows OS appearance settings (Light, Dark, System Default) with high-visibility scrollbars and drag-scrolling support.
-- **Shift-Left Security & Verification:** Developed under strict quality gates with CycloneDX SBOM generation and SonarQube quality gate verification.
+- **Exposure audit:** runs `systemd-analyze security` across all services and groups them by systemd's own exposure levels (UNSAFE, EXPOSED, MEDIUM, OK).
+- **Tiered recommendations:** every missing directive is shown as a question with advice and a ready-to-paste snippet. Only Tier 1 (five low-risk settings) can be applied automatically, after you review and confirm. Tier 2 and Tier 3 stay manual.
+- **Reversible changes:** SysdSafe never edits a unit file. Its change is one file, `/etc/systemd/system/<unit>.d/sysdsafe-tier1.conf`. The original definition is backed up first, and **Restore** removes the file, reloads systemd and restarts the unit.
+- **Changes & Backups tab:** lists every service SysdSafe has touched, shows the original definition and the applied drop-in, and restores with one click.
+- **Built-in reference:** directive documentation generated from your system's own man pages (requires `pandoc`).
+- **Theme awareness and accessibility:** follows your desktop's light or dark setting, with drag scrolling, wide always-visible scrollbars, jump buttons and scalable text.
+
+## Safeguards
+
+- Backup first: if the original definition can't be saved, nothing is changed.
+- Review dialog listing each directive before anything is applied; a warning if you change a second service before testing the first.
+- **Protected services:** auto-fix is never offered for services where even low-risk settings can lock you out or break the system, including `sshd`, display managers, `getty`, `cron`, `systemd-*`, D-Bus, polkit, NetworkManager and container managers. The root helper enforces the same list.
+- A narrow root helper that only writes or removes `sysdsafe-tier1.conf` for the named service, and only with the five Tier 1 lines.
+- Health checks right after applying and again 20 seconds later, offering **Revert now** if the service failed or stopped.
+
+## Important to know
+
+- **SysdSafe runs as root.** It relaunches itself through `pkexec` and asks for an administrator password. Use it on machines you administer.
+- **Low risk is not no risk.** Health checks only see whether a service keeps running, not whether every feature works. Change one service at a time and test it.
+- Logs, the database and plain-text backups are kept in **`/var/lib/sysdsafe/`** (root only). Backups made by earlier versions in `~/sysdsafe_backups/` still appear in the Backups tab.
+- Links (About, audit report, Email Support) open in your own desktop session, never as root.
 
 ## Documentation
 
-For full installation instructions, architecture diagrams, and safe rollback guidelines, please see the [User Guide](docs/USER_GUIDE.md).
+Installation, the privilege model, recovery steps and the full safeguard list are in the [User Guide](docs/USER_GUIDE.md).
 
 ## Support
 
-If you encounter any issues, SysdSafe features a built-in logging facility and an "Email Support" button to quickly get in touch with our team. Please refer to the User Guide for more details.
+The **Logs** tab has an **Email Support** button (support@nordheim.online). To report a security problem, see [SECURITY.md](SECURITY.md).
 
 ## License
 
-This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
-See the [LICENSE](LICENSE) file for the full text.
+This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0). See the [LICENSE](LICENSE) file for the full text. It comes with no warranty.
 
-Source code is available at: https://github.com/TaliskerMan/SysdSafe
+Source code: https://github.com/TaliskerMan/SysdSafe

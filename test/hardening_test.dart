@@ -12,16 +12,27 @@
 // systemd-analyze output, validating service names, and generating the
 // privileged drop-in content (the byte-exact write that replaced printf %b).
 
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sysdsafe/engine/recommendations.dart';
 import 'package:sysdsafe/hardening.dart';
 import 'package:sysdsafe/scanner.dart';
+
+/// Reads a `NAME="..."` assignment from the root helper script.
+List<String> _helperList(String name) {
+  final script = File('linux/packaging/sysdsafe-helper').readAsStringSync();
+  final match = RegExp('^$name="([^"]*)"\$', multiLine: true).firstMatch(script);
+  expect(match, isNotNull, reason: '$name not found in sysdsafe-helper');
+  return match!.group(1)!.split(' ').where((s) => s.isNotEmpty).toList();
+}
 
 void main() {
   group('Hardening.isSafeServiceName', () {
     test('accepts ordinary unit names', () {
       expect(Hardening.isSafeServiceName('sshd.service'), isTrue);
       expect(Hardening.isSafeServiceName('user@1000.service'), isTrue);
+      expect(Hardening.isSafeServiceName(r'a\x2db.service'), isTrue);
     });
 
     test('rejects empty, path-separator and parent-ref names', () {
@@ -29,6 +40,85 @@ void main() {
       expect(Hardening.isSafeServiceName('../etc/passwd'), isFalse);
       expect(Hardening.isSafeServiceName('foo/bar.service'), isFalse);
       expect(Hardening.isSafeServiceName('a..b'), isFalse);
+    });
+
+    test('rejects option-like, non-service and odd-character names', () {
+      expect(Hardening.isSafeServiceName('-x.service'), isFalse);
+      expect(Hardening.isSafeServiceName('foo.socket'), isFalse);
+      expect(Hardening.isSafeServiceName('.service'), isFalse);
+      expect(Hardening.isSafeServiceName('foo bar.service'), isFalse);
+      expect(Hardening.isSafeServiceName('*.service'), isFalse);
+    });
+  });
+
+  group('Hardening.isProtectedService', () {
+    test('blocks services where Tier 1 can lock users out', () {
+      for (final name in [
+        'sshd.service',
+        'ssh.service',
+        'user@1000.service',
+        'gdm3.service',
+        'lightdm.service',
+        'display-manager.service',
+        'systemd-logind.service',
+        'dbus.service',
+        'getty@tty1.service',
+        'cron.service',
+        'docker.service',
+        'NetworkManager.service',
+        'lightdm-greeter.service',
+      ]) {
+        expect(Hardening.isProtectedService(name), isTrue, reason: name);
+      }
+    });
+
+    test('allows ordinary standalone daemons', () {
+      for (final name in [
+        'cups.service',
+        'avahi-daemon.service',
+        'nginx.service',
+        'bluetooth.service',
+      ]) {
+        expect(Hardening.isProtectedService(name), isFalse, reason: name);
+      }
+    });
+  });
+
+  group('Dart and root helper stay in sync', () {
+    test('protected list matches PROTECTED_UNITS', () {
+      expect(_helperList('PROTECTED_UNITS'), Hardening.protectedUnitPatterns);
+    });
+
+    test('allowlist matches ALLOWED_LINES and the Tier 1 snippets', () {
+      expect(_helperList('ALLOWED_LINES'), Hardening.tier1AllowedLines);
+      for (final line in Hardening.tier1AllowedLines) {
+        final directive = line.split('=').first;
+        final advice = RecommendationEngine.getAdvice(directive);
+        expect(advice.tier, 1, reason: directive);
+        expect(advice.snippet, line, reason: directive);
+      }
+    });
+  });
+
+  group('Hardening.isAllowedTier1Content', () {
+    test('accepts generated Tier 1 drop-ins', () {
+      expect(
+        Hardening.isAllowedTier1Content(
+          '[Service]\nNoNewPrivileges=yes\nRestrictRealtime=yes\n',
+        ),
+        isTrue,
+      );
+    });
+
+    test('rejects anything else', () {
+      expect(
+        Hardening.isAllowedTier1Content('[Service]\nExecStartPre=/bin/id\n'),
+        isFalse,
+      );
+      expect(
+        Hardening.isAllowedTier1Content('[Unit]\nNoNewPrivileges=yes\n'),
+        isFalse,
+      );
     });
   });
 

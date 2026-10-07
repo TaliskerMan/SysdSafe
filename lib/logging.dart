@@ -10,6 +10,7 @@
 
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:sysdsafe/paths.dart';
 
 /// Service class that provides centralized logging for the SysdSafe application.
 ///
@@ -23,16 +24,16 @@ class LogService {
 
   /// Initialize the logging service.
   ///
-  /// Resolves the home state directory (~/.local/state/sysdsafe), creating it if
-  /// needed, and establishes the target log file handle.
+  /// Resolves the state directory (see [sysdsafeStateDir]: `/var/lib/sysdsafe`
+  /// when running as root), creating it if needed, and establishes the target
+  /// log file handle.
   Future<void> init() async {
-    final homeDir = Platform.environment['HOME'] ?? '/root';
-    final stateDir = Directory('$homeDir/.local/state/sysdsafe');
-    if (!await stateDir.exists()) {
-      await stateDir.create(recursive: true);
-    }
+    final stateDir = await sysdsafeStateDir();
     _logFile = File('${stateDir.path}/app.log');
   }
+
+  /// Full path of the log file, or null before [init].
+  static String? get logFilePath => _instance._logFile?.path;
 
   void _log(String level, String message) {
     final timestamp = DateTime.now().toUtc().toIso8601String();

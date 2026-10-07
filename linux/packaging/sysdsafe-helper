@@ -3,60 +3,95 @@
 # sysdsafe-helper - privileged helper for SysdSafe.
 #
 # Invoked as root via `pkexec` against the polkit action
-# online.nordheim.sysdsafe.manage-service. It performs ONLY the two narrow
-# operations the GUI needs (apply / revert a Tier-1 drop-in) with strict input
-# validation. It never evaluates user input as code.
+# online.nordheim.sysdsafe.manage-service (or directly when SysdSafe already
+# runs as root). It performs ONLY the two narrow operations the GUI needs
+# (apply / revert a Tier-1 drop-in) with strict input validation. It never
+# evaluates user input as code.
 #
 # Installed to /usr/lib/sysdsafe/sysdsafe-helper, owned root:root, mode 0755.
+#
+# KEEP IN SYNC with lib/hardening.dart: PROTECTED_UNITS must equal
+# Hardening.protectedUnitPatterns and ALLOWED_LINES Hardening.tier1AllowedLines.
+# test/hardening_test.dart reads this file and fails if they drift.
 #
 set -euo pipefail
 
 die() { echo "sysdsafe-helper: $*" >&2; exit 1; }
 
-# Reject empty unit names and anything containing a path separator or parent ref.
+PROTECTED_UNITS="user@* user-runtime-dir@* *greeter* getty@* serial-getty@* autovt@* container-getty@* console-getty ssh sshd sshd@* systemd-* dbus dbus-broker polkit display-manager gdm gdm3 sddm lightdm lxdm xdm accounts-daemon NetworkManager networking wpa_supplicant cron crond anacron atd docker containerd podman libvirtd snapd rescue emergency"
+
+ALLOWED_LINES="NoNewPrivileges=yes ProtectKernelTunables=yes ProtectControlGroups=yes ProtectKernelLogs=yes RestrictRealtime=yes"
+
+SYSTEMD_DIR="/etc/systemd/system"
+DROPIN_NAME="sysdsafe-tier1.conf"
+
+# <name>.service using only systemd unit-name characters; never starts with '-'.
 valid_unit() {
-  case "$1" in
-    "" | */* | *..*) return 1 ;;
-    *) return 0 ;;
-  esac
+  local unit="$1"
+  local re='^[A-Za-z0-9:_.@\-]+\.service$'
+  [[ -n "$unit" && ${#unit} -le 255 ]] || return 1
+  [[ "$unit" != -* && "$unit" != *..* && "$unit" != */* ]] || return 1
+  [[ "$unit" =~ $re ]] || return 1
+  [[ "$unit" != ".service" ]]
 }
 
-# The drop-in directory must live directly under /etc/systemd/system and end in .d
-valid_dropin_dir() {
-  case "$1" in
-    *..*) return 1 ;;
-    /etc/systemd/system/*.d) return 0 ;;
-    *) return 1 ;;
-  esac
+is_protected() {
+  local stem="${1%.service}" pattern
+  local -a patterns
+  # read -a does not perform pathname expansion, so '*' stays a pattern.
+  read -r -a patterns <<< "$PROTECTED_UNITS"
+  for pattern in "${patterns[@]}"; do
+    # Unquoted right-hand side of == is a glob pattern match.
+    # shellcheck disable=SC2053
+    if [[ "$stem" == $pattern ]]; then return 0; fi
+  done
+  return 1
 }
 
-# The drop-in file must be our exact override file inside such a directory.
-valid_dropin_path() {
-  case "$1" in
-    *..*) return 1 ;;
-    /etc/systemd/system/*.d/sysdsafe-tier1.conf) return 0 ;;
-    *) return 1 ;;
-  esac
+# Every line must be blank, "[Service]", or one of ALLOWED_LINES.
+valid_content() {
+  local line allowed ok
+  local -a allowed_lines
+  read -r -a allowed_lines <<< "$ALLOWED_LINES"
+  while IFS= read -r line; do
+    [[ -z "$line" || "$line" == "[Service]" ]] && continue
+    ok=1
+    for allowed in "${allowed_lines[@]}"; do
+      if [[ "$line" == "$allowed" ]]; then ok=0; break; fi
+    done
+    [[ $ok -eq 0 ]] || return 1
+  done <<< "$1"
+  return 0
 }
 
 cmd="${1:-}"
 case "$cmd" in
   apply)
     dir="${2:-}"; file="${3:-}"; unit="${4:-}"; content="${5:-}"
-    valid_unit "$unit"        || die "invalid unit name"
-    valid_dropin_dir "$dir"   || die "invalid drop-in directory"
-    valid_dropin_path "$file" || die "invalid drop-in file path"
-    mkdir -p -- "$dir"
-    # printf '%s' writes bytes exactly: no backslash-escape or %-specifier
-    # interpretation (the whole reason this helper exists).
-    printf '%s' "$content" > "$file"
+    valid_unit "$unit"                          || die "invalid unit name"
+    [[ "$dir" == "$SYSTEMD_DIR/$unit.d" ]]      || die "drop-in directory does not match unit"
+    [[ "$file" == "$dir/$DROPIN_NAME" ]]        || die "drop-in file path does not match unit"
+    is_protected "$unit"                        && die "refusing to auto-harden protected unit $unit"
+    valid_content "$content"                    || die "content contains lines other than the Tier 1 allowlist"
+    mkdir -p -m 0755 -- "$dir"
+    # Write to a temp file in the same directory, then rename: the drop-in is
+    # never seen half-written. printf '%s' writes bytes exactly (no backslash
+    # or %-specifier interpretation).
+    tmp="$(mktemp -- "$dir/.$DROPIN_NAME.XXXXXX")"
+    trap 'rm -f -- "$tmp"' EXIT
+    printf '%s' "$content" > "$tmp"
+    chmod 0644 -- "$tmp"
+    mv -f -- "$tmp" "$file"
+    trap - EXIT
     systemctl daemon-reload
     systemctl try-restart -- "$unit"
     ;;
   revert)
+    # Revert is always allowed (including for protected units), so a user can
+    # always undo a drop-in, whatever version created it.
     file="${2:-}"; unit="${3:-}"
-    valid_unit "$unit"        || die "invalid unit name"
-    valid_dropin_path "$file" || die "invalid drop-in file path"
+    valid_unit "$unit"                                  || die "invalid unit name"
+    [[ "$file" == "$SYSTEMD_DIR/$unit.d/$DROPIN_NAME" ]] || die "drop-in file path does not match unit"
     rm -f -- "$file"
     systemctl daemon-reload
     systemctl try-restart -- "$unit"

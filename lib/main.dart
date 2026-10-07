@@ -1,4 +1,4 @@
-// Auto-incremented to version 1.0.11 for build release on 2026-10-06 (Rule CP-AutoIncrement / Rule CP-ChangeComments)
+// Version 1.0.12 (single-sourced from pubspec.yaml)
 // Copyright (C) 2026 Chuck Talk <chuck@nordheim.online>
 // This file is part of SysdSafe.
 //
@@ -16,7 +16,6 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:google_fonts/google_fonts.dart';
 import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -34,7 +33,7 @@ import 'package:sysdsafe/ui/logs.dart';
 import 'package:sysdsafe/ui/onboarding.dart';
 import 'package:sysdsafe/ui/reference_screen.dart';
 import 'package:sysdsafe/ui/service_list.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:sysdsafe/desktop_launcher.dart';
 
 /// Top-level FFI initialization function for sqlite3 dynamic library resolution.
 /// (CP-ChangeComments: Overrides Linux sqlite3 lookup to load libsqlite3.so.0 cleanly if libsqlite3.so is missing)
@@ -129,9 +128,13 @@ class SysdSafeApp extends StatelessWidget {
               seedColor: Colors.blue,
               brightness: Brightness.light,
             ),
-            textTheme: GoogleFonts.notoSansTextTheme(
-              ThemeData.light().textTheme,
-            ).apply(bodyColor: Colors.black, displayColor: Colors.black),
+            // System Noto Sans (falls back to the platform default). No
+            // runtime font download: this process runs as root.
+            textTheme: ThemeData.light().textTheme.apply(
+              fontFamily: 'Noto Sans',
+              bodyColor: Colors.black,
+              displayColor: Colors.black,
+            ),
             scaffoldBackgroundColor: Colors.white,
             scrollbarTheme: ScrollbarThemeData(
               thumbVisibility: const WidgetStatePropertyAll(true),
@@ -153,9 +156,11 @@ class SysdSafeApp extends StatelessWidget {
               seedColor: Colors.blue,
               brightness: Brightness.dark,
             ),
-            textTheme: GoogleFonts.notoSansTextTheme(
-              ThemeData.dark().textTheme,
-            ).apply(bodyColor: Colors.white, displayColor: Colors.white),
+            textTheme: ThemeData.dark().textTheme.apply(
+              fontFamily: 'Noto Sans',
+              bodyColor: Colors.white,
+              displayColor: Colors.white,
+            ),
             // Dark navy background
             scaffoldBackgroundColor: const Color(0xFF001F3F),
             cardColor: const Color(0xFF003366),
@@ -335,16 +340,26 @@ class _MainScreenState extends State<MainScreen> {
         jsonData,
       );
 
-      // Write the generated viewer next to the audit JSON in the state dir.
-      final viewerFile = File(p.join(auditDir.path, 'audit_viewer.html'));
+      // Write the viewer where the desktop user's own browser can read it
+      // (the root-only state dir is not readable by them), then open it as
+      // that user — never as root.
+      final viewerDir = await DesktopLauncher.userViewableDir();
+      final viewerFile = File(p.join(viewerDir.path, 'audit_viewer.html'));
       await viewerFile.writeAsString(htmlContent);
+      await DesktopLauncher.giveToUser(viewerFile);
 
-      // Open in default browser
       final uri = Uri.file(viewerFile.absolute.path);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri);
-      } else {
-        LogService.error('Could not launch browser for $uri');
+      if (!await DesktopLauncher.open(uri)) {
+        LogService.error('Could not open the audit viewer at ${viewerFile.path}');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Could not open your browser. The report is at ${viewerFile.path}',
+              ),
+            ),
+          );
+        }
       }
     } catch (error) {
       LogService.error('Error opening audit viewer: $error');
