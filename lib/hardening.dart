@@ -79,6 +79,7 @@ class Hardening {
     'podman',
     'libvirtd',
     'snapd',
+    'cups*',
     'rescue',
     'emergency',
   ];

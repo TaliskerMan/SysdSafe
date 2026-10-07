@@ -67,6 +67,9 @@ void main() {
         'docker.service',
         'NetworkManager.service',
         'lightdm-greeter.service',
+        'cups.service',
+        'cupsd.service',
+        'cups-browsed.service',
       ]) {
         expect(Hardening.isProtectedService(name), isTrue, reason: name);
       }
@@ -74,7 +77,6 @@ void main() {
 
     test('allows ordinary standalone daemons', () {
       for (final name in [
-        'cups.service',
         'avahi-daemon.service',
         'nginx.service',
         'bluetooth.service',

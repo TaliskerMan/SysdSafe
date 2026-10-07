@@ -18,7 +18,7 @@ set -euo pipefail
 
 die() { echo "sysdsafe-helper: $*" >&2; exit 1; }
 
-PROTECTED_UNITS="user@* user-runtime-dir@* *greeter* getty@* serial-getty@* autovt@* container-getty@* console-getty ssh sshd sshd@* systemd-* dbus dbus-broker polkit display-manager gdm gdm3 sddm lightdm lxdm xdm accounts-daemon NetworkManager networking wpa_supplicant cron crond anacron atd docker containerd podman libvirtd snapd rescue emergency"
+PROTECTED_UNITS="user@* user-runtime-dir@* *greeter* getty@* serial-getty@* autovt@* container-getty@* console-getty ssh sshd sshd@* systemd-* dbus dbus-broker polkit display-manager gdm gdm3 sddm lightdm lxdm xdm accounts-daemon NetworkManager networking wpa_supplicant cron crond anacron atd docker containerd podman libvirtd snapd cups* rescue emergency"
 
 ALLOWED_LINES="NoNewPrivileges=yes ProtectKernelTunables=yes ProtectControlGroups=yes ProtectKernelLogs=yes RestrictRealtime=yes"
 
