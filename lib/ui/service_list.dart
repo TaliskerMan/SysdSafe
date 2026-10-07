@@ -10,6 +10,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sysdsafe/hardening.dart';
 import 'package:sysdsafe/scanner.dart';
 import 'package:sysdsafe/state.dart';
 import 'package:sysdsafe/ui/service_detail.dart';
@@ -160,35 +161,54 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
                 itemCount: filtered.length,
                 itemBuilder: (context, index) {
                   final service = filtered[index];
+                  final isProtected = Hardening.isProtectedService(service.name);
                   return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 6),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: ListTile(
-                      leading: Icon(
-                        Icons.security,
-                        color: _getColor(service.exposureLevel),
-                        size: 32,
-                      ),
-                      title: Text(
-                        service.name,
-                        style: TextStyle(
-                          fontSize: appState.fontSizeBase + 2,
-                          fontWeight: FontWeight.bold,
+                        margin: const EdgeInsets.symmetric(vertical: 6),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                      ),
-                      subtitle: Text('Exposure: ${service.exposureScore}'),
-                      trailing: Chip(
-                        label: Text(
-                          service.exposureLevel,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: appState.fontSizeBase - 2,
+                        child: ListTile(
+                          leading: Icon(
+                            Icons.security,
+                            color: _getColor(service.exposureLevel),
+                            size: 32,
                           ),
-                        ),
-                        backgroundColor: _getColor(service.exposureLevel),
-                      ),
+                          title: Text(
+                            service.name,
+                            style: TextStyle(
+                              fontSize: appState.fontSizeBase + 2,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          subtitle: Text('Exposure: ${service.exposureScore}'),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (isProtected)
+                                const Padding(
+                                  padding: EdgeInsets.only(right: 8.0),
+                                  child: Tooltip(
+                                    message:
+                                        'Protected Unit: First Do No Harm\nModification blocked to prevent lockout or failure.',
+                                    child: Icon(
+                                      Icons.shield,
+                                      color: Colors.blueAccent,
+                                      size: 20,
+                                    ),
+                                  ),
+                                ),
+                              Chip(
+                                label: Text(
+                                  service.exposureLevel,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: appState.fontSizeBase - 2,
+                                  ),
+                                ),
+                                backgroundColor: _getColor(service.exposureLevel),
+                              ),
+                            ],
+                          ),
                       onTap: () {
                         Navigator.push(
                           context,

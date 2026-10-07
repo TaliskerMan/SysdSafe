@@ -34,8 +34,13 @@ const String kSysdSafeHelper = '/usr/lib/sysdsafe/sysdsafe-helper';
 /// It supports manual hardening copy/paste snippets, automated low-risk tier-1
 /// hardening via [Process.run] (with safety backups), and reversion of fixes.
 class ServiceDetailScreen extends StatefulWidget {
-  const ServiceDetailScreen({required this.service, super.key});
+  const ServiceDetailScreen({
+    required this.service,
+    this.initialVulnerabilities,
+    super.key,
+  });
   final SystemdService service;
+  final List<Vulnerability>? initialVulnerabilities;
 
   @override
   State<ServiceDetailScreen> createState() => _ServiceDetailScreenState();
@@ -80,7 +85,12 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _loadDetails();
+    if (widget.initialVulnerabilities != null) {
+      vulnerabilities = widget.initialVulnerabilities!;
+      isLoading = false;
+    } else {
+      _loadDetails();
+    }
   }
 
   /// Scans the service vulnerabilities and updates the UI state.
@@ -667,41 +677,69 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                   SliverToBoxAdapter(
                     child: isDangerousService
                         ? Card(
-                            color: isDark ? Colors.red[900] : Colors.red[100],
+                            elevation: 3,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: BorderSide(
+                                color: isDark ? Colors.redAccent : Colors.red,
+                                width: 1.5,
+                              ),
+                            ),
+                            color: isDark ? Colors.red[950] : Colors.red[50],
                             child: Padding(
-                              padding: const EdgeInsets.all(16),
+                              padding: const EdgeInsets.all(18),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
                                     children: [
                                       Icon(
-                                        Icons.warning,
+                                        Icons.gpp_bad,
                                         color: isDark
-                                            ? Colors.white
-                                            : Colors.red[900],
+                                            ? Colors.redAccent
+                                            : Colors.red[800],
+                                        size: 28,
                                       ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'CRITICAL WARNING',
-                                        style: TextStyle(
-                                          fontSize: appState.fontSizeBase + 4,
-                                          fontWeight: FontWeight.bold,
-                                          color: isDark
-                                              ? Colors.white
-                                              : Colors.red[900],
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Text(
+                                          'FIRST DO NO HARM — DO NOT MODIFY',
+                                          style: TextStyle(
+                                            fontSize: appState.fontSizeBase + 3,
+                                            fontWeight: FontWeight.bold,
+                                            letterSpacing: 0.5,
+                                            color: isDark
+                                                ? Colors.white
+                                                : Colors.red[900],
+                                          ),
                                         ),
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 8),
+                                  const SizedBox(height: 12),
                                   Text(
-                                    'Do NOT modify or harden this service. Hardening ${widget.service.name} can lock you out of your system. Auto-fix has been disabled to protect your system.',
+                                    Hardening.getProtectionReason(
+                                      widget.service.name,
+                                    ),
+                                    style: TextStyle(
+                                      fontSize: appState.fontSizeBase + 1,
+                                      fontWeight: FontWeight.w600,
+                                      height: 1.4,
+                                      color: isDark
+                                          ? Colors.red[100]
+                                          : Colors.red[900],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    'SysdSafe has permanently disabled auto-fix for this unit. Attempting to sandbox or modify directives on ${widget.service.name} will break essential host operations, prevent recovery, or lock you out of your system.',
                                     style: TextStyle(
                                       fontSize: appState.fontSizeBase,
+                                      fontStyle: FontStyle.italic,
+                                      height: 1.3,
                                       color: isDark
-                                          ? Colors.white
-                                          : Colors.red[900],
+                                          ? Colors.grey[300]
+                                          : Colors.red[800],
                                     ),
                                   ),
                                 ],

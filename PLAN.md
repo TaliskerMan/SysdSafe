@@ -11,13 +11,13 @@
   - [x] Add unit tests in `test/backup_test.dart`
   - [x] Run `flutter analyze`, `flutter test`, and `code-gate.sh`
   - [x] Run local SonarQube quality gate scan
-- Release v1.0.12 (Completed):
-  - [x] Fix legal UI license display by bundling `assets/LICENSE` with filesystem fallback
-  - [x] Link Nordheim Online logo to https://nordheim.online per CP-NordheimLogo
-  - [x] Auto-increment version chip in AboutScreen to v1.0.12
-  - [x] Install LICENSE in Debian packaging (/usr/share/doc/sysdsafe/copyright and /opt/sysdsafe/LICENSE)
-  - [x] Add unit and widget tests for license loading, logo linking, and version display
-  - [x] Enforce GPG release signing with Chuck Talk key 1779CD0F
-  - [x] Pass ShiftLeft gate (code-gate.sh: static analysis, Syft CycloneDX SBOM, OSV-Scanner, Grype)
-  - [x] Package 64-bit DEB, sign with GPG detached signature, compute SHA512, archive to ~/NOBuilds
-  - [x] Publish v1.0.12 release on GitHub
+- Release v1.0.13 (Completed):
+  - [x] Protect sensitive services (cups*, com.system76.*, thermald, tlp, udisks2, etc.) in lib/hardening.dart and sysdsafe-helper
+  - [x] Add specific hazard explanations to Hardening.getProtectionReason()
+  - [x] Add "FIRST DO NO HARM — DO NOT MODIFY" warning card to ServiceDetailScreen
+  - [x] Add visual shield indicator badge to ServiceListScreen
+  - [x] Add unit and widget tests for protected services, hazard explanations, and UI components
+  - [x] Auto-increment version to 1.0.13 across codebase (pubspec.yaml, lib/main.dart, lib/ui/about.dart, README.md, CHANGELOG.md, USER_GUIDE.md)
+  - [x] Pass ShiftLeft code-gate.sh (Syft SBOM, OSV-Scanner, Grype, flutter test, flutter analyze)
+  - [x] Run build.sh to package DEB, sign with GPG key 1779CD0F, compute SHA512, archive to ~/NOBuilds
+  - [x] Tag v1.0.13, push to GitHub, and create public release with verified artifacts

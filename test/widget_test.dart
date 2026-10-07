@@ -15,9 +15,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:sysdsafe/main.dart';
+import 'package:sysdsafe/scanner.dart';
 import 'package:sysdsafe/state.dart';
 import 'package:sysdsafe/ui/about.dart';
 import 'package:sysdsafe/ui/legal.dart';
+import 'package:sysdsafe/ui/service_detail.dart';
+import 'package:sysdsafe/ui/service_list.dart';
 
 /// Main entry point for the SysdSafe widget and integration tests.
 void main() {
@@ -89,8 +92,8 @@ void main() {
     expect(find.byType(LegalScreen), findsOneWidget);
   });
 
-  testWidgets('AboutScreen renders v1.0.12 version chip per CP-AutoIncrement', (tester) async {
-    // (CP-AutoIncrement): Verifies that current release version 1.0.12 is shown
+  testWidgets('AboutScreen renders v1.0.13 version chip per CP-AutoIncrement', (tester) async {
+    // (CP-AutoIncrement): Verifies that current release version 1.0.13 is shown
     await tester.pumpWidget(
       ChangeNotifierProvider(
         create: (context) => AppState(),
@@ -101,7 +104,72 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('v1.0.12'), findsOneWidget);
+    expect(find.text('v1.0.13'), findsOneWidget);
     expect(find.text('What is SysdSafe?'), findsOneWidget);
+  });
+
+  testWidgets('ServiceDetailScreen displays First Do No Harm warning for protected services', (tester) async {
+    final sshService = SystemdService(
+      name: 'ssh.service',
+      description: 'OpenBSD Secure Shell server',
+      exposureScore: 8.5,
+      exposureLevel: 'UNSAFE',
+      icon: '🚨',
+    );
+
+    await tester.pumpWidget(
+      ChangeNotifierProvider(
+        create: (context) => AppState(),
+        child: MaterialApp(
+          home: ServiceDetailScreen(
+            service: sshService,
+            initialVulnerabilities: const [],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Verify First Do No Harm banner and specific reason are displayed
+    expect(find.text('FIRST DO NO HARM — DO NOT MODIFY'), findsOneWidget);
+    expect(find.byIcon(Icons.gpp_bad), findsOneWidget);
+    expect(find.textContaining('OpenSSH server'), findsOneWidget);
+    expect(find.textContaining('locking you out'), findsOneWidget);
+  });
+
+  testWidgets('ServiceListScreen displays protected shield icon for protected units', (tester) async {
+    final services = [
+      SystemdService(
+        name: 'cups.service',
+        description: 'CUPS Scheduler',
+        exposureScore: 9.6,
+        exposureLevel: 'UNSAFE',
+        icon: '🚨',
+      ),
+      SystemdService(
+        name: 'nginx.service',
+        description: 'Nginx HTTP Server',
+        exposureScore: 5.0,
+        exposureLevel: 'MEDIUM',
+        icon: '⚠️',
+      ),
+    ];
+
+    await tester.pumpWidget(
+      ChangeNotifierProvider(
+        create: (context) => AppState(),
+        child: MaterialApp(
+          home: Scaffold(
+            body: ServiceListScreen(services: services),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // cups.service is protected, nginx.service is not
+    expect(find.byIcon(Icons.shield), findsOneWidget);
+    expect(find.text('cups.service'), findsOneWidget);
+    expect(find.text('nginx.service'), findsOneWidget);
   });
 }

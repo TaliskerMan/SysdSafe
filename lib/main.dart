@@ -1,4 +1,4 @@
-// Version 1.0.12 (single-sourced from pubspec.yaml)
+// Version 1.0.13 (single-sourced from pubspec.yaml)
 // Copyright (C) 2026 Chuck Talk <chuck@nordheim.online>
 // This file is part of SysdSafe.
 //

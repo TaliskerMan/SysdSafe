@@ -70,6 +70,18 @@ void main() {
         'cups.service',
         'cupsd.service',
         'cups-browsed.service',
+        'com.system76.Scheduler.service',
+        'com.system76.PowerDaemon.service',
+        'com.system76.SystemUpdater.service',
+        'unattended-upgrades.service',
+        'udisks2.service',
+        'dm-event.service',
+        'vboxdrv.service',
+        'nvidia-persistenced.service',
+        'acpid.service',
+        'smartmontools.service',
+        'dmesg.service',
+        'plymouth-start.service',
       ]) {
         expect(Hardening.isProtectedService(name), isTrue, reason: name);
       }
@@ -83,6 +95,13 @@ void main() {
       ]) {
         expect(Hardening.isProtectedService(name), isFalse, reason: name);
       }
+    });
+
+    test('getProtectionReason returns specific guidance for protected services', () {
+      expect(Hardening.getProtectionReason('cups.service'), contains('Printing infrastructure'));
+      expect(Hardening.getProtectionReason('ssh.service'), contains('OpenSSH server'));
+      expect(Hardening.getProtectionReason('com.system76.Scheduler.service'), contains('System76 Scheduler'));
+      expect(Hardening.getProtectionReason('udisks2.service'), contains('Storage daemon'));
     });
   });
 

@@ -4,6 +4,16 @@ All notable changes to the SysdSafe project are documented in this file. This pr
 
 ---
 
+## [1.0.13] - 2026-10-07
+
+### Security / "First Do No Harm" Enforcement
+- **Comprehensive Protected Services Coverage:** Expanded the protected unit patterns to encompass printing daemons (`cups`, `cups-browsed`, `cupsd`), hardware & scheduling services (`com.system76.*`), thermal and power management (`thermald`, `power-profiles-daemon`, `tlp`, `upower`), storage services (`udisks2`), and hardware communication (`bluetooth`). Modification is permanently blocked in both the UI and the root helper (`/usr/lib/sysdsafe/sysdsafe-helper`).
+- **Prominent Warnings with Specific Hazard Explanations:** Replaced generic safety warnings in the service detail view with a bold, distinct red card titled **"FIRST DO NO HARM — DO NOT MODIFY"**. Each protected service displays a tailored explanation (`Hardening.getProtectionReason`) clarifying exactly why modifying the unit will cause failure, privilege loss, hardware malfunction, or system lockout.
+- **Service List Visual Protected Indicators:** Added a dedicated blue shield icon (`Icons.shield`) with descriptive tooltip in the service overview list, allowing administrators to immediately recognize protected units without having to navigate into details.
+- **Parity Verification Testing:** Added unit and widget tests to ensure the root helper `sysdsafe-helper` `PROTECTED_UNITS` strictly matches the Dart application's protected unit list and that UI banners and list badges render accurately.
+
+---
+
 ## [1.0.12] - 2026-10-07
 
 ### Security / Safety
