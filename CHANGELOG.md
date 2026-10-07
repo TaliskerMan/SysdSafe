@@ -4,6 +4,16 @@ All notable changes to the SysdSafe project are documented in this file. This pr
 
 ---
 
+## [1.0.14] - 2026-10-07
+
+### Security / "First Do No Harm" Critical Extensions
+- **Remote Admin & Interface Dispatcher Protection:** Added permanent protection and explicit hazard guidance for remote administration consoles (`webmin`, `nxserver`, `nxnode`, `nxd`), and network interface state dispatchers (`networkd-dispatcher`). Setting `NoNewPrivileges` or `RestrictRealtime` on these services severs administrative access, breaks child hook scripts (`/etc/networkd-dispatcher/`), and leads to complete remote lockout upon reboot.
+- **Package Management & OS Transition Safeguards:** Added protection for `com.ubuntu.SoftwareProperties`, `needrestart`, and `org.pop_os.transition_system` (`pop-transition`). Prevents PolicyKit authorization breakage, memory inspection failures, and partial OS upgrade corruption that could render systems unbootable.
+- **Mail & Diagnostic Services:** Protected Mail Transport Agents (`postfix`, `postfix@*`) from setgid `maildrop` breaks under `NoNewPrivileges`, adaptive readahead (`preload`) from `/proc` profiling blocks, and diagnostic crash submission (`whoopsie`, `apport`).
+- **Synchronized Enforcement:** Updated `Hardening.protectedUnitPatterns` and root helper `/usr/lib/sysdsafe/sysdsafe-helper` `PROTECTED_UNITS` with comprehensive technical hazard reasons in `Hardening.getProtectionReason`.
+
+---
+
 ## [1.0.13] - 2026-10-07
 
 ### Security / "First Do No Harm" Enforcement

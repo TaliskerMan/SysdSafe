@@ -68,13 +68,16 @@ On first launch, SysdSafe builds its directive reference from your system's man 
 - **Backup or nothing.** SysdSafe saves the current definition (`systemctl cat <unit>`) to its database and to `/var/lib/sysdsafe/backups/<unit>.backup`. If the backup fails, nothing is changed.
 - **Review dialog.** Every directive to be added is listed with its question before you confirm.
 - **One service at a time.** You get a warning if you change a second service before testing the first. You can override it.
-- **Protected services (First Do No Harm).** Auto-fix is permanently disabled, accompanied by an unmistakable red **"FIRST DO NO HARM — DO NOT MODIFY"** warning banner explaining the exact operational hazard (lockout, broken hardware controls, lost printing, or kernel sync failures). The protected list is matched against unit names without `.service`:
-  - Remote access & login: `ssh`, `sshd`, `sshd@*`, `getty@*`, `serial-getty@*`, `autovt@*`, `container-getty@*`, `console-getty`, `user@*`, `user-runtime-dir@*`, `*greeter*`, `display-manager`, `gdm`, `gdm3`, `sddm`, `lightdm`, `lxdm`, `xdm`, `accounts-daemon`
-  - System core & scheduling: `systemd-*`, `dbus`, `dbus-broker`, `polkit`, `cron`, `crond`, `anacron`, `atd`, `rescue`, `emergency`
-  - Networking & resolution: `NetworkManager`, `NetworkManager-wait-online`, `networking`, `wpa_supplicant`, `systemd-resolved`, `systemd-networkd`
-  - Printing & imaging: `cups`, `cups-browsed`, `cupsd`
-  - Hardware management & power: `com.system76.*`, `thermald`, `power-profiles-daemon`, `tlp`, `upower`, `udisks2`, `bluetooth`
-  - Container runtimes & hypervisors: `docker`, `containerd`, `podman`, `libvirtd`, `snapd`
+- **Protected services (First Do No Harm).** Auto-fix is permanently disabled, accompanied by an unmistakable red **"FIRST DO NO HARM — DO NOT MODIFY"** warning banner explaining the exact operational hazard (lockout, broken hardware controls, lost printing, severed remote desktop, or kernel sync failures). The protected list is matched against unit names without `.service`:
+  - Remote access, admin & login: `ssh`, `sshd`, `sshd@*`, `nxserver*`, `nxnode*`, `nxd*`, `webmin*`, `getty@*`, `serial-getty@*`, `autovt@*`, `container-getty@*`, `console-getty`, `user@*`, `user-runtime-dir@*`, `*greeter*`, `display-manager`, `gdm`, `gdm3`, `sddm`, `lightdm`, `lxdm`, `xdm`, `accounts-daemon`
+  - System core & scheduling: `systemd-*`, `dbus`, `dbus-broker`, `polkit`, `cron`, `crond`, `anacron`, `atd`, `rescue`, `emergency`, `rc-local*`
+  - Networking & interface dispatchers: `NetworkManager`, `NetworkManager-wait-online`, `networking`, `wpa_supplicant`, `systemd-resolved`, `systemd-networkd`, `networkd-dispatcher*`
+  - Package management & OS transition: `com.ubuntu.SoftwareProperties*`, `*software-properties*`, `net.ibh.NeedRestart*`, `*needrestart*`, `org.pop_os.transition_system*`, `*transition_system*`, `*pop-transition*`, `*updater*`, `unattended-upgrades`
+  - Mail transport: `postfix*`, `postfix@*`
+  - Printing & imaging: `cups*` (`cups`, `cups-browsed`, `cupsd`)
+  - Hardware management & power: `com.system76.*`, `thermald`, `power-profiles-daemon`, `tlp`, `upower`, `udisks2*`, `dm-event*`, `lvm2-*`, `bluetooth`, `acpid*`, `smartmontools*`, `alsa-state*`, `nvidia*`
+  - Readahead & diagnostics: `preload*`, `whoopsie*`, `apport*`, `plymouth*`, `dmesg*`, `tpm-udev*`
+  - Container runtimes & hypervisors: `docker`, `containerd`, `podman`, `libvirtd`, `vbox*`, `snapd`
 - **Checked names.** Only `<name>.service` names made of systemd's unit-name characters are accepted. Names are always passed after `--` so they can't be read as options.
 
 ### During the change

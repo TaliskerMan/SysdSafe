@@ -82,6 +82,16 @@ void main() {
         'smartmontools.service',
         'dmesg.service',
         'plymouth-start.service',
+        'com.ubuntu.SoftwareProperties.service',
+        'net.ibh.NeedRestart.System.service',
+        'org.pop_os.transition_system.service',
+        'networkd-dispatcher.service',
+        'nxserver.service',
+        'postfix.service',
+        'postfix@-.service',
+        'preload.service',
+        'webmin.service',
+        'whoopsie.service',
       ]) {
         expect(Hardening.isProtectedService(name), isTrue, reason: name);
       }
@@ -91,7 +101,7 @@ void main() {
       for (final name in [
         'avahi-daemon.service',
         'nginx.service',
-        'bluetooth.service',
+        'apache2.service',
       ]) {
         expect(Hardening.isProtectedService(name), isFalse, reason: name);
       }
@@ -102,6 +112,11 @@ void main() {
       expect(Hardening.getProtectionReason('ssh.service'), contains('OpenSSH server'));
       expect(Hardening.getProtectionReason('com.system76.Scheduler.service'), contains('System76 Scheduler'));
       expect(Hardening.getProtectionReason('udisks2.service'), contains('Storage daemon'));
+      expect(Hardening.getProtectionReason('networkd-dispatcher.service'), contains('Network state change hook dispatcher'));
+      expect(Hardening.getProtectionReason('nxserver.service'), contains('NoMachine remote desktop server'));
+      expect(Hardening.getProtectionReason('webmin.service'), contains('Webmin web-based system administration console'));
+      expect(Hardening.getProtectionReason('postfix.service'), contains('Postfix Mail Transport Agent'));
+      expect(Hardening.getProtectionReason('org.pop_os.transition_system.service'), contains('Operating system release and migration manager'));
     });
   });
 

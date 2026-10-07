@@ -92,8 +92,8 @@ void main() {
     expect(find.byType(LegalScreen), findsOneWidget);
   });
 
-  testWidgets('AboutScreen renders v1.0.13 version chip per CP-AutoIncrement', (tester) async {
-    // (CP-AutoIncrement): Verifies that current release version 1.0.13 is shown
+  testWidgets('AboutScreen renders v1.0.14 version chip per CP-AutoIncrement', (tester) async {
+    // (CP-AutoIncrement): Verifies that current release version 1.0.14 is shown
     await tester.pumpWidget(
       ChangeNotifierProvider(
         create: (context) => AppState(),
@@ -104,7 +104,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('v1.0.13'), findsOneWidget);
+    expect(find.text('v1.0.14'), findsOneWidget);
     expect(find.text('What is SysdSafe?'), findsOneWidget);
   });
 

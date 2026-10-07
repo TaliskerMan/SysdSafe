@@ -97,6 +97,22 @@ class Hardening {
     'dmesg*',
     'tpm-udev*',
     'rc-local*',
+    'com.ubuntu.SoftwareProperties*',
+    '*software-properties*',
+    'net.ibh.NeedRestart*',
+    '*needrestart*',
+    'org.pop_os.transition_system*',
+    '*transition_system*',
+    '*pop-transition*',
+    'networkd-dispatcher*',
+    'nxserver*',
+    'nxnode*',
+    'nxd*',
+    'postfix*',
+    'preload*',
+    'webmin*',
+    'whoopsie*',
+    'apport*',
     'rescue',
     'emergency',
   ];
@@ -220,6 +236,39 @@ class Hardening {
     if (_globMatch('user@*', stem) ||
         _globMatch('user-runtime-dir@*', stem)) {
       return 'User session broker service. Sandboxing user runtime units breaks desktop environment initialization and all user applications.';
+    }
+    if (_globMatch('com.ubuntu.SoftwareProperties*', stem) ||
+        _globMatch('*software-properties*', stem)) {
+      return 'Software and repository management backend. Sandboxing breaks APT keyring updates, PPA additions, and PolicyKit elevation, which can corrupt package management and prevent critical security patches.';
+    }
+    if (_globMatch('net.ibh.NeedRestart*', stem) ||
+        _globMatch('*needrestart*', stem)) {
+      return 'Library and daemon restart monitor. Inspects process memory maps in /proc to detect outdated shared libraries after package updates. Sandboxing blinds needrestart to running processes, leaving unpatched security vulnerabilities active.';
+    }
+    if (_globMatch('org.pop_os.transition_system*', stem) ||
+        _globMatch('*transition_system*', stem) ||
+        _globMatch('*pop-transition*', stem)) {
+      return 'Operating system release and migration manager. Manages distribution upgrades and recovery partition syncs. Sandboxing causes mid-upgrade failures that can leave the system unbootable or lock you out of the desktop shell upon reboot.';
+    }
+    if (_globMatch('networkd-dispatcher*', stem)) {
+      return 'Network state change hook dispatcher. Executes routing, firewall, and DNS hook scripts in /etc/networkd-dispatcher/. Sandboxing causes child hook scripts to inherit NoNewPrivileges, breaking sudo/setuid commands and risking total network connectivity loss upon reboot.';
+    }
+    if (_globMatch('nxserver*', stem) ||
+        _globMatch('nxnode*', stem) ||
+        _globMatch('nxd*', stem)) {
+      return 'NoMachine remote desktop server. Spawns session helpers with realtime priority and setuid user transitions. Setting RestrictRealtime crashes remote sessions, and NoNewPrivileges terminates remote graphical administration, causing immediate remote lockout.';
+    }
+    if (_globMatch('postfix*', stem)) {
+      return 'Postfix Mail Transport Agent. Uses setgid maildrop binaries (postdrop, postqueue) to place messages in the mail queue. NoNewPrivileges breaks setgid execution, causing all local mail and critical administrative monitoring alerts (cron, smartd, fail2ban) to fail.';
+    }
+    if (_globMatch('preload*', stem)) {
+      return 'Adaptive readahead daemon. SysV-generated service that profiles memory mappings in /proc to prefetch binaries. Sandboxing conflicts with SysV init wrappers and blocks memory profiling.';
+    }
+    if (_globMatch('webmin*', stem)) {
+      return 'Webmin web-based system administration console. Manages user accounts, storage, firewalls, and packages. Sandboxing breaks PAM authentication and system configuration changes, permanently locking administrators out of the web interface.';
+    }
+    if (_globMatch('whoopsie*', stem) || _globMatch('apport*', stem)) {
+      return 'System crash report submission daemon. Reads restricted crash logs and minidumps in /var/crash/ with lock synchronization. Sandboxing disrupts system diagnostic and crash telemetry pipelines.';
     }
     if (_globMatch('rescue*', stem) || _globMatch('emergency*', stem)) {
       return 'Emergency disaster recovery shell. Must maintain unrestricted system privileges to allow recovery of broken installations.';

@@ -1,4 +1,4 @@
-# SysdSafe (v1.0.13)
+# SysdSafe (v1.0.14)
 
 SysdSafe is a graphical tool for auditing and hardening systemd services on Debian- and Ubuntu-based Linux. It reads systemd's own security audit (`systemd-analyze security`), explains each missing protection in plain language, and can apply a small set of low-risk settings for you as a separate, reversible drop-in file.
 
@@ -16,7 +16,7 @@ SysdSafe is a graphical tool for auditing and hardening systemd services on Debi
 - **First Do No Harm:** SysdSafe enforces a strict safety-first approach. Prominent warning banners and unit shield indicators immediately alert users when viewing sensitive or protected services, explaining exactly *why* sandboxing will cause failure or lockout.
 - Backup first: if the original definition can't be saved, nothing is changed.
 - Review dialog listing each directive before anything is applied; a warning if you change a second service before testing the first.
-- **Protected services:** auto-fix is permanently blocked for services where even low-risk settings can lock you out, impair printing, crash container runtimes, or break hardware management. Protected categories include SSH/remote access, display managers, login gettys, cron/atd, systemd core, D-Bus, polkit, NetworkManager, CUPS printing (`cups`, `cups-browsed`, `cupsd`), System76 hardware daemons (`com.system76.*`), power/thermal daemons (`thermald`, `power-profiles-daemon`, `tlp`), storage managers (`udisks2`), and container engines (`docker`, `containerd`, `podman`). The root helper enforces the identical list.
+- **Protected services:** auto-fix is permanently blocked for services where even low-risk settings can lock you out, impair printing, crash container runtimes, or break hardware management. Protected categories include SSH/remote access, remote administration consoles (`webmin`, `nxserver`), display managers, login gettys, network hook dispatchers (`networkd-dispatcher`), task schedulers (`cron`, `atd`), mail transport (`postfix`), systemd core, D-Bus, polkit, NetworkManager, package/OS transition helpers (`com.ubuntu.SoftwareProperties`, `needrestart`, `pop-transition`), CUPS printing (`cups`, `cups-browsed`, `cupsd`), System76 hardware daemons (`com.system76.*`), power/thermal daemons (`thermald`, `power-profiles-daemon`, `tlp`), storage managers (`udisks2`), and container engines (`docker`, `containerd`, `podman`). The root helper enforces the identical list.
 - A narrow root helper that only writes or removes `sysdsafe-tier1.conf` for the named service, and only with the five Tier 1 lines.
 - Health checks right after applying and again 20 seconds later, offering **Revert now** if the service failed or stopped.
 

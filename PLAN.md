@@ -11,13 +11,13 @@
   - [x] Add unit tests in `test/backup_test.dart`
   - [x] Run `flutter analyze`, `flutter test`, and `code-gate.sh`
   - [x] Run local SonarQube quality gate scan
-- Release v1.0.13 (Completed):
-  - [x] Protect sensitive services (cups*, com.system76.*, thermald, tlp, udisks2, etc.) in lib/hardening.dart and sysdsafe-helper
-  - [x] Add specific hazard explanations to Hardening.getProtectionReason()
-  - [x] Add "FIRST DO NO HARM — DO NOT MODIFY" warning card to ServiceDetailScreen
-  - [x] Add visual shield indicator badge to ServiceListScreen
-  - [x] Add unit and widget tests for protected services, hazard explanations, and UI components
-  - [x] Auto-increment version to 1.0.13 across codebase (pubspec.yaml, lib/main.dart, lib/ui/about.dart, README.md, CHANGELOG.md, USER_GUIDE.md)
-  - [x] Pass ShiftLeft code-gate.sh (Syft SBOM, OSV-Scanner, Grype, flutter test, flutter analyze)
-  - [x] Run build.sh to package DEB, sign with GPG key 1779CD0F, compute SHA512, archive to ~/NOBuilds
-  - [x] Tag v1.0.13, push to GitHub, and create public release with verified artifacts
+- Release v1.0.14 (Completed):
+  - [x] Analyze 9 candidate services (com.ubuntu.SoftwareProperties, net.ibh.NeedRestart.System, org.pop_os.transition_system, networkd-dispatcher, nxserver, postfix, preload, webmin, whoopsie)
+  - [x] Protect candidate services in `lib/hardening.dart` and `sysdsafe-helper`
+  - [x] Add tailored hazard explanations to `Hardening.getProtectionReason`
+  - [x] Auto-increment version to 1.0.14 across pubspec.yaml, lib/main.dart, lib/ui/about.dart, test/widget_test.dart, README.md, CHANGELOG.md, USER_GUIDE.md
+  - [x] Update test assertions in `test/hardening_test.dart` and `test/widget_test.dart`
+  - [x] Run `flutter analyze` and `flutter test`
+  - [x] Pass ShiftLeft code gate (`~/sarules/sonarqube/code-gate.sh`)
+  - [x] Run `./build.sh` to package DEB, sign with GPG key 1779CD0F, compute SHA512, archive to `~/NOBuilds/`
+  - [x] Tag v1.0.14, push to GitHub, and create public release with verified artifacts

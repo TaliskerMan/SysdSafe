@@ -18,7 +18,7 @@ set -euo pipefail
 
 die() { echo "sysdsafe-helper: $*" >&2; exit 1; }
 
-PROTECTED_UNITS="user@* user-runtime-dir@* *greeter* getty@* serial-getty@* autovt@* container-getty@* console-getty ssh sshd sshd@* systemd-* dbus dbus-broker polkit display-manager gdm gdm3 sddm lightdm lxdm xdm accounts-daemon NetworkManager networking wpa_supplicant cron crond anacron atd docker containerd podman libvirtd snapd cups* com.system76.* *updater* unattended-upgrades udisks2* dm-event* lvm2-* vbox* nvidia* acpid* smartmontools* alsa-state* fail2ban* crowdsec* plymouth* dmesg* tpm-udev* rc-local* rescue emergency"
+PROTECTED_UNITS="user@* user-runtime-dir@* *greeter* getty@* serial-getty@* autovt@* container-getty@* console-getty ssh sshd sshd@* systemd-* dbus dbus-broker polkit display-manager gdm gdm3 sddm lightdm lxdm xdm accounts-daemon NetworkManager networking wpa_supplicant cron crond anacron atd docker containerd podman libvirtd snapd cups* com.system76.* *updater* unattended-upgrades udisks2* dm-event* lvm2-* vbox* nvidia* acpid* smartmontools* alsa-state* fail2ban* crowdsec* plymouth* dmesg* tpm-udev* rc-local* com.ubuntu.SoftwareProperties* *software-properties* net.ibh.NeedRestart* *needrestart* org.pop_os.transition_system* *transition_system* *pop-transition* networkd-dispatcher* nxserver* nxnode* nxd* postfix* preload* webmin* whoopsie* apport* rescue emergency"
 
 ALLOWED_LINES="NoNewPrivileges=yes ProtectKernelTunables=yes ProtectControlGroups=yes ProtectKernelLogs=yes RestrictRealtime=yes"
 

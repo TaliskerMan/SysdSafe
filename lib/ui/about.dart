@@ -50,10 +50,10 @@ class AboutScreen extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    // CP-AutoIncrement (106) & CP-ChangeComments (107): Display current release v1.0.13
+                    // CP-AutoIncrement (106) & CP-ChangeComments (107): Display current release v1.0.14
                     Chip(
                       label: Text(
-                        'v1.0.13',
+                        'v1.0.14',
                         style: TextStyle(
                           fontSize: appState.fontSizeBase - 1,
                           fontWeight: FontWeight.bold,
