@@ -75,7 +75,7 @@ void main(List<String> args) async {
     }
   }
 
-  if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
+  if (Platform.isLinux || Platform.isMacOS) {
     sysdsafeFfiInit();
     sqfliteFfiInit();
     databaseFactory = createDatabaseFactoryFfi(ffiInit: sysdsafeFfiInit);
