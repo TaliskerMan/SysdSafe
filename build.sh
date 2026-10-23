@@ -40,6 +40,9 @@ if command -v "${SYFT_BIN}" &> /dev/null; then
     "${SYFT_BIN}" dir:. \
         --exclude "./*.deb" \
         --exclude "./*.tar.gz" \
+        --exclude "./artifacts" \
+        --exclude "./deb_pkg" \
+        --exclude "./Audit" \
         --exclude ./venv \
         --exclude ./android \
         --exclude ./ios \
@@ -61,13 +64,16 @@ DEB_FILE="sysdsafe_${VERSION}_${ARCH}.deb"
 
 echo "Generating Checksums..."
 sha512sum "$DEB_FILE" > "${DEB_FILE}.sha512"
+sha256sum "$DEB_FILE" > "${DEB_FILE}.sha256"
 
-echo "Signing package with GPG..."
+GPG_KEY="chuck@nordheim.online"
+echo "Signing package with GPG key: $GPG_KEY..."
 if command -v gpg > /dev/null 2>&1; then
-    rm -f "${DEB_FILE}.asc" "${DEB_FILE}.sig"
-    gpg --batch --no-tty --local-user 1779CD0F50DBB64C187908264863C73517D810F8 --detach-sign --armor "$DEB_FILE"
-    gpg --batch --no-tty --local-user 1779CD0F50DBB64C187908264863C73517D810F8 --detach-sign --output "${DEB_FILE}.sig" "$DEB_FILE"
-    gpg --batch --no-tty --export -a 1779CD0F50DBB64C187908264863C73517D810F8 > "pubkey.asc"
+    rm -f "${DEB_FILE}.asc" "${DEB_FILE}.sig" pubkey.asc chuck_pubkey.asc
+    gpg --batch --no-tty --pinentry-mode loopback --local-user "$GPG_KEY" --detach-sign --armor "$DEB_FILE"
+    gpg --batch --no-tty --pinentry-mode loopback --local-user "$GPG_KEY" --detach-sign --output "${DEB_FILE}.sig" "$DEB_FILE"
+    gpg --batch --no-tty --export -a "$GPG_KEY" > "pubkey.asc"
+    cp pubkey.asc chuck_pubkey.asc
 else
     echo "WARNING: GPG not found - package NOT signed!"
 fi
@@ -82,15 +88,27 @@ cp "${DEB_FILE}" "${NOBUILDS_DIR}/"
 cp "${DEB_FILE}.asc" "${NOBUILDS_DIR}/" || true
 cp "${DEB_FILE}.sig" "${NOBUILDS_DIR}/" || true
 cp "${DEB_FILE}.sha512" "${NOBUILDS_DIR}/" || true
+cp "${DEB_FILE}.sha256" "${NOBUILDS_DIR}/" || true
 cp pubkey.asc "${NOBUILDS_DIR}/" || true
+cp chuck_pubkey.asc "${NOBUILDS_DIR}/" || true
 cp LICENSE "${NOBUILDS_DIR}/"
 cp README.md "${NOBUILDS_DIR}/"
 cp Audit/SBOM-Linux.json "${NOBUILDS_DIR}/" || true
 cp Audit/SBOM-Linux "${NOBUILDS_DIR}/" || true
 cp Audit/sbom.json "${NOBUILDS_DIR}/" || true
+if [ -f "Audit/security_report.md" ]; then
+    cp Audit/security_report.md "${NOBUILDS_DIR}/"
+fi
 
 # Generate source code archive
 echo "Generating source tarball..."
-tar --exclude=build --exclude=.dart_tool --exclude=.git -czf "${NOBUILDS_DIR}/sysdsafe_source.tar.gz" .
+tar --exclude=build --exclude=.dart_tool --exclude=.git --exclude=Audit --exclude=*.deb -czf "${NOBUILDS_DIR}/sysdsafe_source.tar.gz" .
+
+# Multi-file checksums in NOBuilds directory
+(
+    cd "${NOBUILDS_DIR}"
+    sha512sum * > SHA512SUMS 2>/dev/null || true
+    sha256sum * > SHA256SUMS 2>/dev/null || true
+)
 
 echo "Build and Release packaging complete for SysdSafe!"

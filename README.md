@@ -1,4 +1,4 @@
-# SysdSafe (v1.0.14)
+# SysdSafe (v1.0.15)
 
 SysdSafe is a graphical tool for auditing and hardening systemd services on Debian- and Ubuntu-based Linux. It reads systemd's own security audit (`systemd-analyze security`), explains each missing protection in plain language, and can apply a small set of low-risk settings for you as a separate, reversible drop-in file.
 

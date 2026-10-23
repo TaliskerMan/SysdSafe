@@ -21,3 +21,12 @@
   - [x] Pass ShiftLeft code gate (`~/sarules/sonarqube/code-gate.sh`)
   - [x] Run `./build.sh` to package DEB, sign with GPG key 1779CD0F, compute SHA512, archive to `~/NOBuilds/`
   - [x] Tag v1.0.14, push to GitHub, and create public release with verified artifacts
+- Release v1.0.15 (Completed):
+  - [x] Remove vestigial Windows build files and Platform.isWindows checks
+  - [x] Auto-increment version to 1.0.15 across pubspec.yaml, lib/main.dart, lib/ui/about.dart, test/widget_test.dart, README.md, CHANGELOG.md
+  - [x] Update analysis dependencies for Dart SDK compatibility
+  - [x] Run `flutter analyze` and `flutter test` (all 31 tests passing, 0 analyzer issues)
+  - [x] Update build.sh to use Chuck Talk GPG release key (chuck@nordheim.online) and comprehensive checksums
+  - [x] Run `./build.sh` to package DEB, sign with GPG, generate CycloneDX SBOM, and stage to `~/NOBuilds/`
+  - [x] Run security scans (Semgrep, OSV-Scanner, Grype) and compile security audit report
+  - [x] Tag v1.0.15, push to GitHub, and create official public release with verified artifacts

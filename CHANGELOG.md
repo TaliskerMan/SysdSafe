@@ -4,6 +4,15 @@ All notable changes to the SysdSafe project are documented in this file. This pr
 
 ---
 
+## [1.0.15] - 2026-10-23
+
+### Maintenance & Build Pipeline
+- **Linux-Focused Codebase Cleanup:** Removed vestigial Windows build support and `Platform.isWindows` checks, streamlining SysdSafe strictly for Linux systemd environments.
+- **Dependency & Toolchain Compatibility:** Adjusted analysis dependency constraints for modern Dart SDK compatibility without compromising strict static analysis.
+- **Official Linux Release Packaging:** Hardened Debian `.deb` packaging pipeline with GPG detached signatures, CycloneDX SBOM audit artifact generation, and SHA-512 checksum verification.
+
+---
+
 ## [1.0.14] - 2026-10-07
 
 ### Security / "First Do No Harm" Critical Extensions
