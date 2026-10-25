@@ -56,3 +56,6 @@ app.*.map.json
 sysdsafe_*_amd64/
 artifacts/
 sonar-project.properties
+
+# Product presentation / video materials
+preso/
